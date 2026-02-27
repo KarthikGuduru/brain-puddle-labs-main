@@ -32,8 +32,8 @@ const TalkToUsButton: React.FC<TalkToUsButtonProps> = ({ onOpen }) => {
                         fill="transparent"
                     />
                     <text className="floating-btn-text">
-                        <textPath href="#textPath" startOffset="0%">
-                            • Talk to Us  •  Talk to Us
+                        <textPath href="#textPath" startOffset="0%" textLength="232" lengthAdjust="spacing">
+                            • Talk to Us • Talk to Us
                         </textPath>
                     </text>
                 </svg>

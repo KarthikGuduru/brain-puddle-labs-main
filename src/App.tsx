@@ -40,9 +40,9 @@ function App() {
       <div className="page-wrapper" key={location.pathname}>
         <Routes location={location}>
           <Route path="/" element={<HomePage />} />
-          <Route path="/voice-agents" element={<VoiceAgentsPage />} />
-          <Route path="/consultation" element={<ConsultationPage />} />
-          <Route path="/content-creation" element={<ContentCreationPage />} />
+          <Route path="/voice-agents" element={<VoiceAgentsPage onContactOpen={() => setContactOpen(true)} />} />
+          <Route path="/consultation" element={<ConsultationPage onContactOpen={() => setContactOpen(true)} />} />
+          <Route path="/content-creation" element={<ContentCreationPage onContactOpen={() => setContactOpen(true)} />} />
         </Routes>
       </div>
 

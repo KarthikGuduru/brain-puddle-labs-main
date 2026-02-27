@@ -35,7 +35,7 @@ function AnimatedStat({ value, suffix = '' }: { value: number; suffix?: string }
     );
 }
 
-const VoiceAgentsPage: React.FC = () => {
+const VoiceAgentsPage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }) => {
     return (
         <main className="main-content" style={{ paddingTop: '6rem' }}>
             <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem' }}>
@@ -55,9 +55,9 @@ const VoiceAgentsPage: React.FC = () => {
                             <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '2rem', fontWeight: 300 }}>
                                 Your best sales rep — available 24 hours a day, fluent in every language your customers speak, and never takes a sick day. That's what our voice agents deliver.
                             </p>
-                            <Link to="/#contact" style={{ display: 'inline-block', padding: '1rem 2.5rem', borderRadius: '2rem', background: 'var(--accent-color)', color: '#fff', fontWeight: 500, fontSize: '1rem' }}>
+                            <button onClick={onContactOpen} style={{ display: 'inline-block', padding: '1rem 2.5rem', borderRadius: '2rem', background: 'var(--accent-color)', color: '#fff', fontWeight: 500, fontSize: '1rem', border: 'none', cursor: 'pointer' }}>
                                 Hear It In Action
-                            </Link>
+                            </button>
                         </div>
                         <div>
                             <img src="/voice-agents-hero.png" alt="Voice Agents Illustration" style={{ width: '100%', borderRadius: '2rem' }} />
@@ -136,12 +136,12 @@ const VoiceAgentsPage: React.FC = () => {
                 <motion.div {...fadeUp}>
                     <div style={{ background: 'var(--bg-card)', border: 'var(--glass-border)', borderRadius: '2rem', padding: '3rem', marginBottom: '6rem', boxShadow: 'var(--shadow-sm)' }}>
                         <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.15em', color: 'var(--accent-color)', marginBottom: '1rem' }}>Case Study</p>
-                        <h2 style={{ fontSize: '2rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--text-primary)' }}>Book My Chef</h2>
+                        <h2 style={{ fontSize: '2rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--text-primary)' }}>BookMyChef</h2>
                         <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: '1.05rem', fontWeight: 300, maxWidth: '700px', marginBottom: '1.5rem' }}>
-                            A chef-booking platform was drowning in manual coordination calls. We replaced the entire booking pipeline with voice agents that match users to chefs in real-time conversation.
+                            A chef-booking platform was drowning in manual coordination calls. We deployed voice agents to handle all inbound calls — matching users to chefs in real-time conversation.
                         </p>
                         <p style={{ color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: 600 }}>
-                            The result: bookings happen 10x faster, and nobody presses a single button.
+                            The result: every inbound call answered instantly, zero missed bookings, and nobody presses a single button.
                         </p>
                     </div>
                 </motion.div>
@@ -152,9 +152,9 @@ const VoiceAgentsPage: React.FC = () => {
                         <h2 style={{ fontSize: 'clamp(1.75rem, 3vw, 2.25rem)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>
                             Ready to never miss a call again?
                         </h2>
-                        <Link to="/#contact" style={{ display: 'inline-block', padding: '1rem 2.5rem', borderRadius: '2rem', background: 'var(--accent-color)', color: '#fff', fontWeight: 500, fontSize: '1rem' }}>
+                        <button onClick={onContactOpen} style={{ display: 'inline-block', padding: '1rem 2.5rem', borderRadius: '2rem', background: 'var(--accent-color)', color: '#fff', fontWeight: 500, fontSize: '1rem', border: 'none', cursor: 'pointer' }}>
                             Talk to Us
-                        </Link>
+                        </button>
                     </div>
                 </motion.div>
 

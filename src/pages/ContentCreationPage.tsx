@@ -35,7 +35,7 @@ function AnimatedStat({ value, suffix = '' }: { value: number; suffix?: string }
     );
 }
 
-const ContentCreationPage: React.FC = () => {
+const ContentCreationPage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }) => {
     return (
         <main className="main-content" style={{ paddingTop: '6rem' }}>
             <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem' }}>
@@ -55,9 +55,9 @@ const ContentCreationPage: React.FC = () => {
                             <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '2rem', fontWeight: 300 }}>
                                 Your brand voice, amplified. We build content engines that produce blog posts, social media, emails, and ad copy at the quality your audience expects — at a speed your team never could.
                             </p>
-                            <Link to="/#contact" style={{ display: 'inline-block', padding: '1rem 2.5rem', borderRadius: '2rem', background: 'var(--accent-color)', color: '#fff', fontWeight: 500, fontSize: '1rem' }}>
+                            <button onClick={onContactOpen} style={{ display: 'inline-block', padding: '1rem 2.5rem', borderRadius: '2rem', background: 'var(--accent-color)', color: '#fff', fontWeight: 500, fontSize: '1rem', border: 'none', cursor: 'pointer' }}>
                                 See Examples
-                            </Link>
+                            </button>
                         </div>
                         <div>
                             <img src="/content-creation-hero.png" alt="Content Creation Illustration" style={{ width: '100%', borderRadius: '2rem' }} />
@@ -136,9 +136,9 @@ const ContentCreationPage: React.FC = () => {
                         <h2 style={{ fontSize: 'clamp(1.75rem, 3vw, 2.25rem)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>
                             Great brands don't go quiet.<br />Yours won't either.
                         </h2>
-                        <Link to="/#contact" style={{ display: 'inline-block', padding: '1rem 2.5rem', borderRadius: '2rem', background: 'var(--accent-color)', color: '#fff', fontWeight: 500, fontSize: '1rem' }}>
+                        <button onClick={onContactOpen} style={{ display: 'inline-block', padding: '1rem 2.5rem', borderRadius: '2rem', background: 'var(--accent-color)', color: '#fff', fontWeight: 500, fontSize: '1rem', border: 'none', cursor: 'pointer' }}>
                             Start Creating
-                        </Link>
+                        </button>
                     </div>
                 </motion.div>
 

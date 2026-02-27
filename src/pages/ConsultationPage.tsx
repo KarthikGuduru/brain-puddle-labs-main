@@ -9,7 +9,7 @@ const fadeUp = {
     transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }
 };
 
-const ConsultationPage: React.FC = () => {
+const ConsultationPage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }) => {
     return (
         <main className="main-content" style={{ paddingTop: '6rem' }}>
             <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem' }}>
@@ -29,9 +29,9 @@ const ConsultationPage: React.FC = () => {
                             <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '2rem', fontWeight: 300 }}>
                                 Stop guessing which AI initiative to bet on. We find the 2-3 use cases that will actually transform your business — then we build them, ship them, and train your team.
                             </p>
-                            <Link to="/#contact" style={{ display: 'inline-block', padding: '1rem 2.5rem', borderRadius: '2rem', background: 'var(--accent-color)', color: '#fff', fontWeight: 500, fontSize: '1rem' }}>
+                            <button onClick={onContactOpen} style={{ display: 'inline-block', padding: '1rem 2.5rem', borderRadius: '2rem', background: 'var(--accent-color)', color: '#fff', fontWeight: 500, fontSize: '1rem', border: 'none', cursor: 'pointer' }}>
                                 Book a Strategy Call
-                            </Link>
+                            </button>
                         </div>
                         <div>
                             <img src="/consultation-hero.png" alt="AI Consultation Illustration" style={{ width: '100%', borderRadius: '2rem' }} />
@@ -98,9 +98,9 @@ const ConsultationPage: React.FC = () => {
                         <h2 style={{ fontSize: 'clamp(1.75rem, 3vw, 2.25rem)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>
                             The best time to start was yesterday.<br />The second best time is this call.
                         </h2>
-                        <Link to="/#contact" style={{ display: 'inline-block', padding: '1rem 2.5rem', borderRadius: '2rem', background: 'var(--accent-color)', color: '#fff', fontWeight: 500, fontSize: '1rem' }}>
+                        <button onClick={onContactOpen} style={{ display: 'inline-block', padding: '1rem 2.5rem', borderRadius: '2rem', background: 'var(--accent-color)', color: '#fff', fontWeight: 500, fontSize: '1rem', border: 'none', cursor: 'pointer' }}>
                             Book a Strategy Call
-                        </Link>
+                        </button>
                     </div>
                 </motion.div>
 

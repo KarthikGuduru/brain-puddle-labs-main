@@ -28,7 +28,7 @@ const MoonIcon = () => (
     </svg>
 );
 
-const Navigation: React.FC<NavigationProps> = ({ dark, onToggleTheme, onContactOpen }) => {
+const Navigation: React.FC<NavigationProps> = ({ dark, onToggleTheme, onContactOpen: _onContactOpen }) => {
     return (
         <motion.nav
             initial={{ y: -100 }}

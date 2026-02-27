@@ -56,10 +56,7 @@ const partners = [
     {
         name: 'BookMyChef',
         logo: (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.4 }} className="marquee-logo-hover">
-                <img src="/bookmychef-logo.png" alt="BookMyChef" style={{ height: '2rem', filter: 'grayscale(100%)', transition: 'filter 0.5s ease' }} />
-                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '18px', letterSpacing: '-0.3px' }}>BookMyChef</span>
-            </div>
+            <img src="/bookmychef-logo.png" alt="BookMyChef" style={{ height: '2.5rem', opacity: 0.5, transition: 'opacity 0.5s ease' }} />
         )
     }
 ];

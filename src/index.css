@@ -292,6 +292,14 @@ body {
   transition: var(--transition-smooth);
   box-shadow: var(--shadow-sm);
   /* Solid physical object feel */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.services-grid>a,
+.services-grid>div {
+  display: flex;
 }
 
 .service-card:hover {

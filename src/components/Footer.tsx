@@ -34,7 +34,7 @@ const Footer: React.FC = () => {
                     <ul>
                         <li><a href="mailto:thebrainpuddle@gmail.com">thebrainpuddle@gmail.com</a></li>
                         <li><a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
-                        <li><a href="https://twitter.com" target="_blank" rel="noopener noreferrer">X / Twitter</a></li>
+                        <li><a href="https://www.instagram.com/thebrainpuddle/" target="_blank" rel="noopener noreferrer">Instagram</a></li>
                     </ul>
                 </div>
             </div>

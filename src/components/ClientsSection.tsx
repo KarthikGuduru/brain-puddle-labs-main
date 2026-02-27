@@ -56,7 +56,7 @@ const partners = [
     {
         name: 'BookMyChef',
         logo: (
-            <img src="/bookmychef-logo.png" alt="BookMyChef" style={{ height: '2.5rem', opacity: 0.5, transition: 'opacity 0.5s ease' }} />
+            <img src="/bookmychef-logo.png" alt="BookMyChef" className="bookmychef-logo" style={{ height: '2.5rem' }} />
         )
     }
 ];

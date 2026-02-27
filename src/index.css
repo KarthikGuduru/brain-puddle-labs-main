@@ -506,6 +506,15 @@ a:visited {
   color: var(--text-primary);
 }
 
+.bookmychef-logo {
+  opacity: 0.4;
+  transition: opacity 0.5s ease;
+}
+
+.marquee-logo:hover .bookmychef-logo {
+  opacity: 1;
+}
+
 @keyframes slide {
   0% {
     transform: translateX(0);

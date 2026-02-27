@@ -1,0 +1,47 @@
+/* Apple-inspired Typography System */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600;700&family=Outfit:wght@200;400;600;700&display=swap');
+
+:root {
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    /* Apple color palette */
+    --color-white: #F5F5F7;
+    --color-offwhite: #FBFBFD;
+    --color-black: #000000;
+    --color-gray: #86868B;
+    --color-text: #1d1d1f;
+}
+
+body {
+    font-family: var(--font-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.apple-text {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+}
+
+.apple-text-light {
+    font-weight: 200;
+    letter-spacing: 0.01em;
+}
+
+.apple-text-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+.apple-text-body {
+    font-family: var(--font-primary);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.5;
+}

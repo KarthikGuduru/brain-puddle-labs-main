@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const results = [
     {
-        name: "Book My Chef",
+        name: "BookMyChef",
         stat: "10x",
         statDesc: "Faster Bookings",
         desc: "Implemented advanced Voice Agents for seamless user-chef matching. Transformed fragmented booking processes into automated, real-time voice coordination.",
@@ -54,11 +54,14 @@ const partners = [
         )
     },
     {
-        name: 'Book My Chef',
+        name: 'BookMyChef',
         logo: (
-            <svg viewBox="0 0 160 24" className="h-6 fill-current opacity-40 hover:opacity-100 transition-opacity duration-500">
-                <path d="M10 2 C6 2 4 6 4 10 L4 18 C4 18 16 18 16 18 L16 10 C16 6 14 2 10 2 Z M2 22 L18 22 C19.1 22 20 22.9 20 24 L20 26 L0 26 L0 24 C0 22.9 0.9 22 2 22 Z" />
-                <text x="28" y="19" fontFamily="Inter, sans-serif" fontWeight="600" fontSize="18" letterSpacing="-0.3">Book My Chef</text>
+            <svg viewBox="0 0 120 24" className="h-6 fill-current opacity-40 hover:opacity-100 transition-opacity duration-500">
+                <rect x="0" y="0" width="24" height="24" rx="5" />
+                <text x="3" y="9" fontFamily="Inter, sans-serif" fontWeight="800" fontSize="5.5" letterSpacing="0.3">BOOK</text>
+                <text x="5.5" y="15" fontFamily="Inter, sans-serif" fontWeight="800" fontSize="5.5" letterSpacing="0.3">MY</text>
+                <text x="3" y="21" fontFamily="Inter, sans-serif" fontWeight="800" fontSize="5.5" letterSpacing="0.3">CHEF</text>
+                <text x="32" y="19" fontFamily="Inter, sans-serif" fontWeight="600" fontSize="18" letterSpacing="-0.3">BookMyChef</text>
             </svg>
         )
     }

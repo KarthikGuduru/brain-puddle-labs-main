@@ -40,7 +40,7 @@ const HeroSection: React.FC = () => {
                     We turn complex AI into products people actually use. Voice agents that close deals. Content engines that never sleep. Learning platforms that actually teach.
                 </motion.p>
                 <motion.div variants={itemVariants} className="hero-actions">
-                    <button className="btn-primary">See What We Build</button>
+                    <button className="btn-primary" onClick={() => document.getElementById('what-we-do')?.scrollIntoView({ behavior: 'smooth' })}>See What We Build</button>
                 </motion.div>
             </motion.div>
         </section>

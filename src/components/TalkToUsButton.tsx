@@ -33,7 +33,7 @@ const TalkToUsButton: React.FC<TalkToUsButtonProps> = ({ onOpen }) => {
                     />
                     <text className="floating-btn-text">
                         <textPath href="#textPath" startOffset="0%">
-                            • Talk to Us • Talk to Us •
+                            • Talk to Us  •  Talk to Us
                         </textPath>
                     </text>
                 </svg>

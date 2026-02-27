@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 interface NavigationProps {
@@ -29,32 +29,73 @@ const MoonIcon = () => (
 );
 
 const Navigation: React.FC<NavigationProps> = ({ dark, onToggleTheme, onContactOpen: _onContactOpen }) => {
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
     return (
-        <motion.nav
-            initial={{ y: -100 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="nav-container glass"
-        >
-            <div className="nav-logo">
-                <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
-                    <img src="/logo.png" alt="Brain Puddle" style={{ height: '48px', width: 'auto', filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.15))', borderRadius: '6px' }} />
-                </Link>
-            </div>
+        <>
+            <motion.nav
+                initial={{ y: -100 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="nav-container glass"
+            >
+                <div className="nav-logo">
+                    <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
+                        <img src="/logo.png" alt="Brain Puddle" style={{ height: '48px', width: 'auto', filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.15))', borderRadius: '6px' }} />
+                    </Link>
+                </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <Link to="/voice-agents" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Voice Agents</Link>
-                <Link to="/consultation" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Consultation</Link>
-                <Link to="/content-creation" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Content</Link>
-                <a href="https://learnpuddle.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>LearnPuddle</a>
+                {/* Desktop links */}
+                <div className="nav-desktop-links">
+                    <Link to="/voice-agents" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Voice Agents</Link>
+                    <Link to="/consultation" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Consultation</Link>
+                    <Link to="/content-creation" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Content</Link>
+                    <a href="https://learnpuddle.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>LearnPuddle</a>
 
-                <button className="theme-toggle" onClick={onToggleTheme} aria-label="Toggle theme">
-                    <div className="theme-toggle-knob">
-                        {dark ? <MoonIcon /> : <SunIcon />}
-                    </div>
-                </button>
-            </div>
-        </motion.nav>
+                    <button className="theme-toggle" onClick={onToggleTheme} aria-label="Toggle theme">
+                        <div className="theme-toggle-knob">
+                            {dark ? <MoonIcon /> : <SunIcon />}
+                        </div>
+                    </button>
+                </div>
+
+                {/* Mobile controls */}
+                <div className="nav-mobile-controls">
+                    <button className="theme-toggle" onClick={onToggleTheme} aria-label="Toggle theme">
+                        <div className="theme-toggle-knob">
+                            {dark ? <MoonIcon /> : <SunIcon />}
+                        </div>
+                    </button>
+                    <button
+                        className="nav-hamburger"
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        aria-label="Toggle menu"
+                    >
+                        <span className={`hamburger-line ${mobileMenuOpen ? 'open' : ''}`} />
+                        <span className={`hamburger-line ${mobileMenuOpen ? 'open' : ''}`} />
+                        <span className={`hamburger-line ${mobileMenuOpen ? 'open' : ''}`} />
+                    </button>
+                </div>
+            </motion.nav>
+
+            {/* Mobile menu overlay */}
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <motion.div
+                        className="mobile-menu-overlay"
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <Link to="/voice-agents" onClick={() => setMobileMenuOpen(false)}>Voice Agents</Link>
+                        <Link to="/consultation" onClick={() => setMobileMenuOpen(false)}>Consultation</Link>
+                        <Link to="/content-creation" onClick={() => setMobileMenuOpen(false)}>Content</Link>
+                        <a href="https://learnpuddle.com" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}>LearnPuddle</a>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
     );
 };
 

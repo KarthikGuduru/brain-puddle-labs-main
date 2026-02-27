@@ -848,14 +848,14 @@ a:visited {
 
 /* Theme Toggle with Sun/Moon */
 .theme-toggle {
-  background: var(--bg-card);
-  border: var(--glass-border);
+  background: #FFD43B;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 2rem;
-  width: 44px;
-  height: 24px;
-  padding: 2px;
+  width: 48px;
+  height: 26px;
+  padding: 3px;
   cursor: pointer;
-  transition: var(--transition-smooth);
+  transition: background 0.4s ease, border-color 0.4s ease;
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -863,24 +863,64 @@ a:visited {
   overflow: hidden;
 }
 
+/* Dark mode: entire toggle becomes deep blue */
+[data-theme="dark"] .theme-toggle {
+  background: #1a1a4e;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Star dots — hidden in light mode, visible in dark mode */
+.theme-toggle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle, #fff 1.2px, transparent 1.2px) 4px 4px,
+    radial-gradient(circle, #fff 1px, transparent 1px) 18px 7px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.8) 0.9px, transparent 0.9px) 32px 5px,
+    radial-gradient(circle, #fff 1px, transparent 1px) 10px 18px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.7) 0.8px, transparent 0.8px) 26px 16px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.6) 0.7px, transparent 0.7px) 40px 12px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.5) 0.6px, transparent 0.6px) 8px 12px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.9) 1px, transparent 1px) 44px 20px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.4) 0.5px, transparent 0.5px) 20px 22px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.7) 0.8px, transparent 0.8px) 36px 3px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.5) 0.6px, transparent 0.6px) 14px 2px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.6) 0.7px, transparent 0.7px) 42px 8px;
+  background-size: 48px 26px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+[data-theme="dark"] .theme-toggle::after {
+  opacity: 1;
+}
+
 .theme-toggle-knob {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  transition: var(--transition-smooth);
+  transition: transform 0.4s ease, background 0.4s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   z-index: 1;
 }
 
 [data-theme="dark"] .theme-toggle-knob {
-  transform: translateX(20px);
+  transform: translateX(22px);
 }
 
 .theme-toggle-icon {
   width: 14px;
   height: 14px;
-  color: var(--text-primary);
+  color: #e67e22;
+}
+
+[data-theme="dark"] .theme-toggle-icon {
+  color: #7ec8e3;
 }

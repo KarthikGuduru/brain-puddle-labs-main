@@ -56,13 +56,10 @@ const partners = [
     {
         name: 'BookMyChef',
         logo: (
-            <svg viewBox="0 0 120 24" className="h-6 fill-current opacity-40 hover:opacity-100 transition-opacity duration-500">
-                <rect x="0" y="0" width="24" height="24" rx="5" />
-                <text x="3" y="9" fontFamily="Inter, sans-serif" fontWeight="800" fontSize="5.5" letterSpacing="0.3">BOOK</text>
-                <text x="5.5" y="15" fontFamily="Inter, sans-serif" fontWeight="800" fontSize="5.5" letterSpacing="0.3">MY</text>
-                <text x="3" y="21" fontFamily="Inter, sans-serif" fontWeight="800" fontSize="5.5" letterSpacing="0.3">CHEF</text>
-                <text x="32" y="19" fontFamily="Inter, sans-serif" fontWeight="600" fontSize="18" letterSpacing="-0.3">BookMyChef</text>
-            </svg>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.4 }} className="marquee-logo-hover">
+                <img src="/bookmychef-logo.png" alt="BookMyChef" style={{ height: '2rem', filter: 'grayscale(100%)', transition: 'filter 0.5s ease' }} />
+                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '18px', letterSpacing: '-0.3px' }}>BookMyChef</span>
+            </div>
         )
     }
 ];

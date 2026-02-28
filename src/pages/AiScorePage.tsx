@@ -8,6 +8,8 @@ import PokemonCard from '../components/ai-score/PokemonCard';
 const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }) => {
     const [step, setStep] = useState<'input' | 'analyzing' | 'results'>('input');
     const [inputUrl, setInputUrl] = useState('');
+    const [resumeFile, setResumeFile] = useState<File | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [analysisText, setAnalysisText] = useState('Booting up quantum analysis core...');
     const [analysisData, setAnalysisData] = useState<any>(null);
@@ -44,16 +46,27 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
     const handleScan = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!inputUrl && !resumeFile) {
+            alert('Please provide either a LinkedIn URL or upload a Resume.');
+            return;
+        }
+
         setStep('analyzing');
         setAnalysisText('Booting up quantum analysis core...');
 
         try {
             // 1. Fetch analysis
             setTimeout(() => setAnalysisText('Cross-referencing AI capabilities...'), 1000);
+
+            // If we have a resume file, we'd normally parse it. Since we only have a text API, 
+            // we will send the filename + a note to simulate it for now unless we add pdf parsing.
+            const payload = { input: inputUrl || `Resume Uploaded: ${resumeFile?.name || 'User Resume'}` };
+
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ input: inputUrl })
+                body: JSON.stringify(payload)
             });
 
             if (!response.ok) throw new Error('Analysis failed');
@@ -140,7 +153,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                             placeholder="https://linkedin.com/in/yourprofile"
                                             value={inputUrl}
                                             onChange={(e) => setInputUrl(e.target.value)}
-                                            required
+                                            style={{ opacity: resumeFile ? 0.5 : 1, pointerEvents: resumeFile ? 'none' : 'auto' }}
                                         />
                                     </div>
                                     <div className="input-group" style={{ marginTop: '1rem' }}>
@@ -155,15 +168,52 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                         {imagePreview && (
                                             <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                 <img src={imagePreview} alt="Preview" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
-                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Ready for Ghibli transformation</span>
+                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Ready for gamified transformation</span>
                                             </div>
                                         )}
                                     </div>
                                     <div className="divider" style={{ margin: '1.5rem 0' }}><span>OR</span></div>
-                                    <div className="upload-zone">
-                                        <div className="upload-icon">📄</div>
-                                        <p>Drag & Drop Resume (PDF)</p>
-                                        <button type="button" className="mock-upload-btn">Browse Files</button>
+
+                                    <div
+                                        className={`upload-zone ${isDragging ? 'dragging' : ''} ${resumeFile ? 'has-file' : ''}`}
+                                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                        onDragLeave={() => setIsDragging(false)}
+                                        onDrop={(e) => {
+                                            e.preventDefault();
+                                            setIsDragging(false);
+                                            const file = e.dataTransfer.files?.[0];
+                                            if (file && file.type === 'application/pdf') setResumeFile(file);
+                                        }}
+                                        style={{
+                                            border: isDragging ? '2px dashed var(--accent-color)' : '1px dashed rgba(255,255,255,0.2)',
+                                            background: isDragging ? 'rgba(255,255,255,0.05)' : 'transparent',
+                                            transition: 'all 0.3s ease'
+                                        }}
+                                    >
+                                        <div className="upload-icon">{resumeFile ? '✅' : '📄'}</div>
+                                        <p>{resumeFile ? resumeFile.name : 'Drag & Drop Resume (PDF)'}</p>
+                                        {!resumeFile && (
+                                            <>
+                                                <button type="button" className="mock-upload-btn" onClick={() => document.getElementById('resume-upload')?.click()}>
+                                                    Browse Files
+                                                </button>
+                                                <input
+                                                    type="file"
+                                                    id="resume-upload"
+                                                    accept=".pdf,application/pdf"
+                                                    style={{ display: 'none' }}
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) setResumeFile(file);
+                                                    }}
+                                                />
+                                            </>
+                                        )}
+                                        {resumeFile && (
+                                            <button type="button" onClick={() => setResumeFile(null)} style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer', fontSize: '0.85rem', marginTop: '10px' }}>
+                                                Remove File
+                                            </button>
+                                        )}
                                     </div>
 
                                     <button type="submit" className="btn-primary scan-btn">

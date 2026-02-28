@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage';
 import VoiceAgentsPage from './pages/VoiceAgentsPage';
 import ConsultationPage from './pages/ConsultationPage';
 import ContentCreationPage from './pages/ContentCreationPage';
+import AiScorePage from './pages/AiScorePage';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -43,6 +44,7 @@ function App() {
           <Route path="/voice-agents" element={<VoiceAgentsPage onContactOpen={() => setContactOpen(true)} />} />
           <Route path="/consultation" element={<ConsultationPage onContactOpen={() => setContactOpen(true)} />} />
           <Route path="/content-creation" element={<ContentCreationPage onContactOpen={() => setContactOpen(true)} />} />
+          <Route path="/ai-score" element={<AiScorePage onContactOpen={() => setContactOpen(true)} />} />
         </Routes>
       </div>
 

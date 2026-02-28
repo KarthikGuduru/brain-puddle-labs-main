@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const HeroSection: React.FC = () => {
     const containerVariants = {
@@ -30,6 +31,14 @@ const HeroSection: React.FC = () => {
                 initial="hidden"
                 animate="visible"
             >
+                <motion.div variants={itemVariants} className="hero-announcement-banner">
+                    <Link to="/ai-score" className="announcement-link">
+                        <span className="announcement-badge">NEW</span>
+                        <span className="announcement-text">Test your AI Resilience with our gamified scanner </span>
+                        <span className="announcement-arrow">→</span>
+                    </Link>
+                </motion.div>
+
                 <motion.div variants={itemVariants} className="hero-badge">
                     The AI studio for builders
                 </motion.div>

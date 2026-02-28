@@ -50,6 +50,7 @@ const Navigation: React.FC<NavigationProps> = ({ dark, onToggleTheme, onContactO
                     <Link to="/voice-agents" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Voice Agents</Link>
                     <Link to="/consultation" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Consultation</Link>
                     <Link to="/content-creation" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Content</Link>
+                    <Link to="/ai-score" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>AI Score</Link>
                     <a href="https://learnpuddle.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>LearnPuddle</a>
 
                     <button className="theme-toggle" onClick={onToggleTheme} aria-label="Toggle theme">
@@ -91,6 +92,7 @@ const Navigation: React.FC<NavigationProps> = ({ dark, onToggleTheme, onContactO
                         <Link to="/voice-agents" onClick={() => setMobileMenuOpen(false)}>Voice Agents</Link>
                         <Link to="/consultation" onClick={() => setMobileMenuOpen(false)}>Consultation</Link>
                         <Link to="/content-creation" onClick={() => setMobileMenuOpen(false)}>Content</Link>
+                        <Link to="/ai-score" onClick={() => setMobileMenuOpen(false)}>AI Score</Link>
                         <a href="https://learnpuddle.com" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}>LearnPuddle</a>
                     </motion.div>
                 )}

@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Secrets and Logs
+.env
+uploads_log.json
+
+# Large media files
+*.mp4
+*.mp3

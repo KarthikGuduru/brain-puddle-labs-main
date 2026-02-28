@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ScoreReport from '../components/ai-score/ScoreReport';
@@ -10,6 +11,27 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [analysisText, setAnalysisText] = useState('Booting up quantum analysis core...');
     const [analysisData, setAnalysisData] = useState<any>(null);
+    const cardRef = useRef<HTMLDivElement>(null);
+
+    const handleDownload = async () => {
+        if (!cardRef.current) return;
+        try {
+            const canvas = await html2canvas(cardRef.current, { backgroundColor: null, useCORS: true, scale: 2 });
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.png`;
+            link.href = dataUrl;
+            link.click();
+        } catch (error) {
+            console.error('Failed to download image', error);
+        }
+    };
+
+    const handleLinkedInShare = () => {
+        const text = `I just checked my AI Resilience Score on BrainPuddle! My replaceability index is ${analysisData?.score}/100 and I am ranked as ${analysisData?.tier}. \n\nCheck yours here: https://brain-puddle.netlify.app/ai-score`;
+        const url = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -223,7 +245,17 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                 </div>
 
                                 <div className="card-col">
-                                    {analysisData && <PokemonCard {...analysisData.pokemon} replaceabilityScore={analysisData.score} replaceabilityTier={analysisData.tier} />}
+                                    <div ref={cardRef} style={{ padding: '1rem', borderRadius: '20px', background: 'transparent' }}>
+                                        {analysisData && <PokemonCard {...analysisData.pokemon} replaceabilityScore={analysisData.score} replaceabilityTier={analysisData.tier} />}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+                                        <button onClick={handleDownload} className="btn-primary" style={{ padding: '0.6rem 1.2rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <span>📥</span> Download Card
+                                        </button>
+                                        <button onClick={handleLinkedInShare} className="btn-secondary" style={{ padding: '0.6rem 1.2rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0a66c2', color: 'white', borderColor: '#0a66c2' }}>
+                                            <span>🔗</span> Share on LinkedIn
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>

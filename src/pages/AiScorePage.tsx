@@ -245,9 +245,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                 </div>
 
                                 <div className="card-col">
-                                    <div ref={cardRef} style={{ padding: '1rem', borderRadius: '20px', background: 'transparent' }}>
-                                        {analysisData && <PokemonCard {...analysisData.pokemon} replaceabilityScore={analysisData.score} replaceabilityTier={analysisData.tier} />}
-                                    </div>
+                                    {analysisData && <PokemonCard ref={cardRef} {...analysisData.pokemon} replaceabilityScore={analysisData.score} replaceabilityTier={analysisData.tier} />}
                                     <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem', flexWrap: 'wrap' }}>
                                         <button onClick={handleDownload} className="btn-primary" style={{ padding: '0.6rem 1.2rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                             <span>📥</span> Download Card

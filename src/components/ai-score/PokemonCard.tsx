@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, forwardRef } from 'react';
 import { motion } from 'framer-motion';
 
 interface PokemonCardProps {
@@ -24,9 +24,9 @@ interface PokemonCardProps {
     replaceabilityTier?: string;
 }
 
-const PokemonCard: React.FC<PokemonCardProps> = ({
+const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
     name, title, photoUrl, type, hp, skills, stats, powerUps, pokedexEntry, stage, primaryDomain, operatingMode, humanLeverage, replaceabilityScore, replaceabilityTier
-}) => {
+}, ref) => {
     const [isFlipped, setIsFlipped] = useState(false);
     const [statColors, setStatColors] = useState<string[]>(['#111', '#111', '#111', '#111']);
     const [hasExtractedColors, setHasExtractedColors] = useState(false);
@@ -117,7 +117,7 @@ const PokemonCard: React.FC<PokemonCardProps> = ({
         : baseGradient;
 
     return (
-        <div className="pokemon-card-container" onClick={() => setIsFlipped(!isFlipped)}>
+        <div ref={ref} className="pokemon-card-container" onClick={() => setIsFlipped(!isFlipped)}>
             <motion.div
                 className="pokemon-card-inner"
                 animate={{ rotateY: isFlipped ? 180 : 0 }}
@@ -252,6 +252,6 @@ const PokemonCard: React.FC<PokemonCardProps> = ({
             </motion.div>
         </div>
     );
-};
+});
 
 export default PokemonCard;

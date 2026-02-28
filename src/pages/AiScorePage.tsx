@@ -7,7 +7,6 @@ import PokemonCard from '../components/ai-score/PokemonCard';
 const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }) => {
     const [step, setStep] = useState<'input' | 'analyzing' | 'results'>('input');
     const [inputUrl, setInputUrl] = useState('');
-    const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [analysisText, setAnalysisText] = useState('Booting up quantum analysis core...');
     const [analysisData, setAnalysisData] = useState<any>(null);
@@ -15,7 +14,6 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setImageFile(file);
             const reader = new FileReader();
             reader.onloadend = () => setImagePreview(reader.result as string);
             reader.readAsDataURL(file);

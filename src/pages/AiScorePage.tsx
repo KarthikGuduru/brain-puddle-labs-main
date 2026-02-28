@@ -244,13 +244,13 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                     </motion.div>
                                 </div>
 
-                                <div className="card-col">
+                                <div className="card-col" style={{ flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
                                     {analysisData && <PokemonCard ref={cardRef} {...analysisData.pokemon} replaceabilityScore={analysisData.score} replaceabilityTier={analysisData.tier} />}
-                                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem', flexWrap: 'wrap' }}>
-                                        <button onClick={handleDownload} className="btn-primary" style={{ padding: '0.6rem 1.2rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <span>📥</span> Download Card
+                                    <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                        <button onClick={handleDownload} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', height: 'fit-content' }}>
+                                            <span>📥</span> Download
                                         </button>
-                                        <button onClick={handleLinkedInShare} className="btn-secondary" style={{ padding: '0.6rem 1.2rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0a66c2', color: 'white', borderColor: '#0a66c2' }}>
+                                        <button onClick={handleLinkedInShare} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#0a66c2', color: 'white', borderColor: '#0a66c2', height: 'fit-content' }}>
                                             <span>🔗</span> Share on LinkedIn
                                         </button>
                                     </div>

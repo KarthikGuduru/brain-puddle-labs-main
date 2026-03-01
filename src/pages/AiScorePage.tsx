@@ -403,6 +403,17 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
                                 <div className="card-col" style={{ flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
                                     {analysisData && <PokemonCard ref={cardRef} {...analysisData.pokemon} replaceabilityScore={analysisData.score} replaceabilityTier={analysisData.tier} />}
+
+                                    <p style={{
+                                        fontSize: '0.9rem',
+                                        color: '#666',
+                                        fontStyle: 'italic',
+                                        margin: '-0.5rem 0 0.5rem 0',
+                                        textAlign: 'center'
+                                    }}>
+                                        👆 Click on the card above to flip!
+                                    </p>
+
                                     <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                                         <button onClick={handleDownload} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', height: 'fit-content' }}>
                                             <span>📥</span> Download

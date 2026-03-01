@@ -20,22 +20,9 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const [analysisData, setAnalysisData] = useState<any>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [isSharing, setIsSharing] = useState(false);
-    const [claimCount, setClaimCount] = useState(0);
     const [claimStatus, setClaimStatus] = useState<'idle' | 'loading' | 'success' | 'full' | 'error'>('idle');
     const [claimError, setClaimError] = useState('');
     const [claimForm, setClaimForm] = useState({ name: '', linkedin: '', address: '' });
-
-    React.useEffect(() => {
-        fetch('/api/claim-card')
-            .then(res => res.json())
-            .then(data => {
-                if (data.count !== undefined) {
-                    setClaimCount(data.count);
-                    if (data.count >= 100) setClaimStatus('full');
-                }
-            })
-            .catch(err => console.error("Failed to fetch claim count", err));
-    }, []);
 
     const handleClaim = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -47,13 +34,15 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                 body: JSON.stringify({
                     name: claimForm.name,
                     linkedinUrl: claimForm.linkedin,
-                    address: claimForm.address
+                    address: claimForm.address,
+                    score: analysisData?.score,
+                    tier: analysisData?.tier,
+                    pokemonName: analysisData?.pokemon?.name || 'Unknown'
                 })
             });
             const data = await res.json();
             if (res.ok) {
                 setClaimStatus('success');
-                setClaimCount(data.count);
             } else {
                 setClaimStatus('error');
                 setClaimError(data.error || 'Failed to claim card');
@@ -489,7 +478,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                         <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <span>Claim Physical Card</span>
                                             <span style={{ fontSize: '0.85rem', background: 'var(--accent-color)', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>
-                                                {claimCount}/100 Claimed
+                                                Limited Edition: 100 Available
                                             </span>
                                         </h3>
                                         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>

@@ -1,31 +1,14 @@
 import { Handler } from '@netlify/functions';
-import { getStore } from '@netlify/blobs';
+import axios from 'axios';
 
 export const handler: Handler = async (event, context) => {
-    // Initialize the store
-    const store = getStore("brainpuddle_claims");
-
-    const getClaimsFromStore = async () => {
-        try {
-            const data = await store.get("claims_data", { type: "json" });
-            if (data) return data as any;
-        } catch (e) {
-            console.error("No existing store found or error reading", e);
-        }
-        return { count: 0, claims: [] };
-    };
-
-    const saveClaimsToStore = async (data: any) => {
-        await store.setJSON("claims_data", data);
-    };
-
-    // Handle GET - just return the current count
+    // Handle GET - Return a hardcoded mock count since we don't have a live DB anymore.
+    // The true count will just be however many rows are in the Google Sheet!
     if (event.httpMethod === 'GET') {
-        const db = await getClaimsFromStore();
         return {
             statusCode: 200,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ count: db.count || 0, max: 100 })
+            body: JSON.stringify({ count: 'Tracking automatically', max: 100 })
         };
     }
 
@@ -33,49 +16,48 @@ export const handler: Handler = async (event, context) => {
     if (event.httpMethod === 'POST') {
         try {
             const payload = JSON.parse(event.body || '{}');
-            const { name, linkedinUrl, address } = payload;
+            const { name, linkedinUrl, address, score, tier, pokemonName } = payload;
 
             if (!name || !linkedinUrl || !address) {
                 return { statusCode: 400, body: JSON.stringify({ error: "Missing required fields" }) };
             }
 
-            const db = await getClaimsFromStore();
-            db.count = db.count || 0;
-            db.claims = db.claims || [];
+            const webhookUrl = process.env.MAKE_WEBHOOK_URL;
 
-            if (db.count >= 100) {
-                return { statusCode: 400, body: JSON.stringify({ error: "All 100 physical cards have been claimed!" }) };
+            // If the user hasn't set up the webhook yet, we still return a success so the UI works
+            // and we log it so they can see it in Netlify logs.
+            if (!webhookUrl) {
+                console.log('--- NEW CARD CLAIM RECEIVED (Setup Pending) ---');
+                console.log(`Name: ${name}\nLinkedIn: ${linkedinUrl}\nAddress: ${address}\nScore: ${score}\nStage: ${pokemonName}`);
+                console.log('Please add MAKE_WEBHOOK_URL to your Netlify Environment Variables to send this to Google Sheets automatically.');
+
+                return {
+                    statusCode: 200,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ success: true, count: "?", message: "Card claimed successfully! (Webhook setup pending)" })
+                };
             }
 
-            // Check if already claimed
-            const alreadyClaimed = db.claims.find((c: any) => c.linkedinUrl === linkedinUrl);
-            if (alreadyClaimed) {
-                return { statusCode: 400, body: JSON.stringify({ error: "A card has already been claimed for this LinkedIn profile." }) };
-            }
-
-            // Create claim
-            const claim = {
-                id: Date.now().toString(),
+            // Forward the payload to Make.com / Zapier or FormSubmit
+            await axios.post(webhookUrl, {
+                timestamp: new Date().toISOString(),
                 name,
                 linkedinUrl,
                 address,
-                timestamp: new Date().toISOString()
-            };
-
-            db.claims.push(claim);
-            db.count = db.claims.length;
-
-            await saveClaimsToStore(db);
+                score,
+                tier,
+                pokemonName
+            });
 
             return {
                 statusCode: 200,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ success: true, count: db.count, message: "Card claimed successfully!" })
+                body: JSON.stringify({ success: true, message: "Card claimed successfully and sent to Google Sheets!" })
             };
 
-        } catch (error) {
-            console.error(error);
-            return { statusCode: 500, body: JSON.stringify({ error: "Failed to process claim" }) };
+        } catch (error: any) {
+            console.error("Webhook forwarding error:", error.message);
+            return { statusCode: 500, body: JSON.stringify({ error: "Failed to process claim via webhook" }) };
         }
     }
 

@@ -3,7 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import fs from 'fs';
-import pdfParse from 'pdf-parse';
+import * as pdfParseLib from 'pdf-parse';
+const pdfParse = typeof pdfParseLib === 'function' ? pdfParseLib : pdfParseLib.default || pdfParseLib;
 
 dotenv.config();
 
@@ -126,9 +127,30 @@ app.post('/api/analyze', async (req, res) => {
                 return res.status(400).json({ error: "Failed to parse PDF document." });
             }
         } else if (type === 'url') {
-            // TODO: Relevance AI Integeration placeholder
-            console.log("LinkedIn URL provided - falling back to basic prompt inference until Relevance API added.");
-            extractedText = data; // use URL natively for now
+            console.log("LinkedIn URL provided - calling Relevance AI webhook.");
+            try {
+                const relevanceRes = await axios.post(
+                    process.env.RELEVANCE_WEBHOOK_URL,
+                    { url: data, name: "" },
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": process.env.RELEVANCE_API_KEY
+                        },
+                        timeout: 25000 // 25s timeout for scraper
+                    }
+                );
+                const output = relevanceRes.data?.output || relevanceRes.data || "";
+                extractedText = typeof output === 'string' ? output : JSON.stringify(output);
+
+                // Truncate to avoid exceeding OpenAI context limits
+                if (extractedText.length > 15000) {
+                    extractedText = extractedText.substring(0, 15000) + '...';
+                }
+            } catch (err) {
+                console.error("Relevance API Error:", err.response?.data || err.message);
+                return res.status(500).json({ error: "Failed to scrape LinkedIn profile. Please try uploading a PDF Resume or Paste your text instead." });
+            }
         } else {
             console.log("Raw text/bio provided.");
             extractedText = data || fallbackInput;
@@ -166,7 +188,7 @@ app.post('/api/analyze', async (req, res) => {
 
         console.log(`Analyzing profile via OpenAI for input [${type}]`);
 
-        const prompt = `You are an expert AI workforce analyst and gamification expert. The user has provided the following profile text, bio, or background context: \n\n"""\n${extractedText}\n"""\n 
+        const prompt = `You are an expert AI workforce analyst and gamification expert. The user has provided the following profile text, bio, or background context: \n\n"""\nEXTRACTED TEXT:\n${extractedText}\n\nRAW INPUT STRING (MIGHT BE A URL):\n${data}\n"""\n 
 Analyze their skills and determine how easily they could be replaced by AI. 
 Provide a brutal but fun gamified report card in the style of a Pokémon card. 
 Return ONLY a valid JSON object matching this exact structure:
@@ -188,7 +210,7 @@ Return ONLY a valid JSON object matching this exact structure:
       "<Suggestion 3: Short actionable sentence...>"
   ],
   "pokemon": {
-      "name": "<Extract their actual human Name from the profile/text. If none is found, use 'Unknown User' - DO NOT invent a moniker or use a job title. MAX 2 WORDS.>",
+      "name": "<CRITICAL: Extract and format their actual human Name. If a LinkedIn URL like 'linkedin.com/in/john-doe' is in the RAW INPUT, the name is 'John Doe'. Look deeply in the EXTRACTED TEXT for a name. If ABSOLUTELY no name can be guessed, use 'Unknown User'. MAX 2 WORDS. Capitalize names properly.>",
       "title": "<Catchy professional title, MAX 4 WORDS>",
       "photoUrl": "",
       "type": "<e.g., Creative, Engineering, Strategy, Visionary>",

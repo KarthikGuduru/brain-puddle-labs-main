@@ -116,6 +116,17 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
         ? `linear-gradient(135deg, ${statColors[0]} 0%, ${statColors[1]} 50%, ${statColors[2]} 100%)`
         : baseGradient;
 
+    // Helper to extract rgb values and darken them for the white background on the back of the card
+    const darkenRgbString = (rgbStr: string) => {
+        const match = rgbStr.match(/\d+/g);
+        if (!match) return rgbStr;
+        const r = Math.floor(parseInt(match[0], 10) * 0.6);
+        const g = Math.floor(parseInt(match[1], 10) * 0.6);
+        const b = Math.floor(parseInt(match[2], 10) * 0.6);
+        return `rgb(${r}, ${g}, ${b})`;
+    };
+    const darkStatColors = statColors.map(darkenRgbString);
+
     return (
         <div ref={ref} className="pokemon-card-container" onClick={() => setIsFlipped(!isFlipped)}>
             <motion.div
@@ -220,25 +231,25 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
                             <div className="back-stat" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                                 <span style={{ width: '45%', fontSize: '0.65rem', fontWeight: 700, lineHeight: 1.1, textAlign: 'left' }}>Cognitive<br />Depth</span>
                                 <div className="stat-bar-container" style={{ width: '55%', background: 'rgba(0,0,0,0.08)', height: '6px', borderRadius: '4px', overflow: 'hidden' }}>
-                                    <div className="stat-bar" style={{ width: `${stats.cognitiveDepth}%`, background: statColors[0], height: '100%', borderRadius: '4px', boxShadow: '0 0 10px rgba(0,0,0,0.2)' }}></div>
+                                    <div className="stat-bar" style={{ width: `${stats.cognitiveDepth}%`, background: darkStatColors[0], height: '100%', borderRadius: '4px', boxShadow: '0 0 10px rgba(0,0,0,0.2)' }}></div>
                                 </div>
                             </div>
                             <div className="back-stat" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                                 <span style={{ width: '45%', fontSize: '0.65rem', fontWeight: 700, lineHeight: 1.1, textAlign: 'left' }}>Decision<br />Autonomy</span>
                                 <div className="stat-bar-container" style={{ width: '55%', background: 'rgba(0,0,0,0.08)', height: '6px', borderRadius: '4px', overflow: 'hidden' }}>
-                                    <div className="stat-bar" style={{ width: `${stats.decisionAutonomy}%`, background: statColors[1], height: '100%', borderRadius: '4px', boxShadow: '0 0 10px rgba(0,0,0,0.2)' }}></div>
+                                    <div className="stat-bar" style={{ width: `${stats.decisionAutonomy}%`, background: darkStatColors[1], height: '100%', borderRadius: '4px', boxShadow: '0 0 10px rgba(0,0,0,0.2)' }}></div>
                                 </div>
                             </div>
                             <div className="back-stat" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                                 <span style={{ width: '45%', fontSize: '0.65rem', fontWeight: 700, lineHeight: 1.1, textAlign: 'left' }}>Adaptability</span>
                                 <div className="stat-bar-container" style={{ width: '55%', background: 'rgba(0,0,0,0.08)', height: '6px', borderRadius: '4px', overflow: 'hidden' }}>
-                                    <div className="stat-bar" style={{ width: `${stats.adaptability}%`, background: statColors[2], height: '100%', borderRadius: '4px', boxShadow: '0 0 10px rgba(0,0,0,0.2)' }}></div>
+                                    <div className="stat-bar" style={{ width: `${stats.adaptability}%`, background: darkStatColors[2], height: '100%', borderRadius: '4px', boxShadow: '0 0 10px rgba(0,0,0,0.2)' }}></div>
                                 </div>
                             </div>
                             <div className="back-stat" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                                 <span style={{ width: '45%', fontSize: '0.65rem', fontWeight: 700, lineHeight: 1.1, textAlign: 'left' }}>System<br />Leverage</span>
                                 <div className="stat-bar-container" style={{ width: '55%', background: 'rgba(0,0,0,0.08)', height: '6px', borderRadius: '4px', overflow: 'hidden' }}>
-                                    <div className="stat-bar" style={{ width: `${stats.systemLeverage}%`, background: statColors[3], height: '100%', borderRadius: '4px', boxShadow: '0 0 10px rgba(0,0,0,0.2)' }}></div>
+                                    <div className="stat-bar" style={{ width: `${stats.systemLeverage}%`, background: darkStatColors[3], height: '100%', borderRadius: '4px', boxShadow: '0 0 10px rgba(0,0,0,0.2)' }}></div>
                                 </div>
                             </div>
                         </div>

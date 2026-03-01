@@ -85,7 +85,7 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
                     else if (180 <= h && h < 240) { r1 = 0; g1 = x; b1 = c; }
                     else if (240 <= h && h < 300) { r1 = x; g1 = 0; b1 = c; }
                     else if (300 <= h && h < 360) { r1 = c; g1 = 0; b1 = x; }
-                    let finalR = Math.round((r1 + m) * 255), finalG = Math.round((g1 + m) * 255), finalB = Math.round((b1 + m) * 255);
+                    const finalR = Math.round((r1 + m) * 255), finalG = Math.round((g1 + m) * 255), finalB = Math.round((b1 + m) * 255);
 
                     return `rgb(${finalR}, ${finalG}, ${finalB})`;
                 });
@@ -188,7 +188,7 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
                                         overflow: 'hidden'
                                     }}>{pu.desc}</div>
                                 </div>
-                                <div className="powerup-damage">{Math.floor(Math.random() * 40) + 20}</div>
+                                <div className="powerup-damage">{(pu.name.length * 7 % 40) + 20}</div>
                             </div>
                         ))}
                     </div>

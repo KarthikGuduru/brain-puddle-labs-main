@@ -100,13 +100,13 @@ const ScoreReport: React.FC<ScoreReportProps> = ({ score, tier, tierColor, categ
             <div className="xp-container">
                 <div className="xp-labels">
                     <span className="xp-title">Evolution Progress</span>
-                    <span className="xp-value">{xp}%</span>
+                    <span className="xp-value">{Math.min(Number(xp) || 0, 100)}%</span>
                 </div>
                 <div className="xp-bar-bg">
                     <motion.div
                         className="xp-bar-fill"
                         initial={{ width: 0 }}
-                        animate={isInView ? { width: `${xp}%` } : { width: 0 }}
+                        animate={isInView ? { width: `${Math.min(Number(xp) || 0, 100)}%` } : { width: 0 }}
                         transition={{ duration: 1.5, delay: 1 }}
                     />
                 </div>

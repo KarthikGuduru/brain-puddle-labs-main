@@ -14,11 +14,54 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const [analysisText, setAnalysisText] = useState('Booting up quantum analysis core...');
     const [analysisData, setAnalysisData] = useState<any>(null);
     const cardRef = useRef<HTMLDivElement>(null);
+    const [isSharing, setIsSharing] = useState(false);
+
+    const captureBothSides = async () => {
+        if (!cardRef.current) return null;
+        const frontEl = cardRef.current.querySelector('.pokemon-card-front') as HTMLElement;
+        const backEl = cardRef.current.querySelector('.pokemon-card-back') as HTMLElement;
+        if (!frontEl || !backEl) return null;
+
+        const opts = { backgroundColor: null, useCORS: true, scale: 2 };
+
+        // Temporarily remove transform/backface visibility for clean flat 2D capture
+        const oldFrontTransform = frontEl.style.transform;
+        const oldBackTransform = backEl.style.transform;
+        frontEl.style.transform = 'none';
+        backEl.style.transform = 'none';
+
+        const frontCanvas = await html2canvas(frontEl, opts);
+        const backCanvas = await html2canvas(backEl, opts);
+
+        // Restore styles
+        frontEl.style.transform = oldFrontTransform;
+        backEl.style.transform = oldBackTransform;
+
+        const gap = 40;
+        const padding = 40;
+        const width = frontCanvas.width + backCanvas.width + gap + (padding * 2);
+        const height = Math.max(frontCanvas.height, backCanvas.height) + (padding * 2);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+
+        // Draw transparent/white gradient background
+        ctx.fillStyle = '#F9F9F9';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.drawImage(frontCanvas, padding, padding);
+        ctx.drawImage(backCanvas, padding + frontCanvas.width + gap, padding);
+
+        return canvas;
+    };
 
     const handleDownload = async () => {
-        if (!cardRef.current) return;
         try {
-            const canvas = await html2canvas(cardRef.current, { backgroundColor: null, useCORS: true, scale: 2 });
+            const canvas = await captureBothSides();
+            if (!canvas) return;
             const dataUrl = canvas.toDataURL('image/png');
             const link = document.createElement('a');
             link.download = `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.png`;
@@ -29,10 +72,37 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         }
     };
 
-    const handleLinkedInShare = () => {
-        const text = `I just checked my AI Resilience Score on BrainPuddle! My replaceability index is ${analysisData?.score}/100 and I am ranked as ${analysisData?.tier}. \n\nCheck yours here: https://brain-puddle.netlify.app/ai-score`;
-        const url = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`;
-        window.open(url, '_blank');
+    const handleLinkedInShare = async () => {
+        try {
+            setIsSharing(true);
+
+            // 1. Capture both sides of the card
+            const canvas = await captureBothSides();
+            if (!canvas) throw new Error("Could not capture card");
+            const dataUrl = canvas.toDataURL('image/png');
+
+            // 2. Upload to Imgur via our backend
+            const uploadRes = await fetch('/api/upload-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: dataUrl })
+            });
+
+            if (!uploadRes.ok) throw new Error('Failed to upload image for sharing');
+            const { url: imageUrl } = await uploadRes.json();
+
+            // 3. Share text + imageUrl (Branded Proxy)
+            const brandedImageUrl = imageUrl.replace('https://iili.io/', 'https://brainpuddle.com/card/');
+
+            const text = `I just checked my AI Resilience Score on BrainPuddle! My replaceability index is ${analysisData?.score}/100 and I am ranked as ${analysisData?.tier}. \n\nCheck yours here: https://brainpuddle.com/ai-score\n\n${brandedImageUrl}`;
+            const url = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        } catch (error) {
+            console.error('Share failed', error);
+            alert('Failed to generate shareable image. You can still download it normally.');
+        } finally {
+            setIsSharing(false);
+        }
     };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -300,8 +370,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                         <button onClick={handleDownload} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', height: 'fit-content' }}>
                                             <span>📥</span> Download
                                         </button>
-                                        <button onClick={handleLinkedInShare} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#0a66c2', color: 'white', borderColor: '#0a66c2', height: 'fit-content' }}>
-                                            <span>🔗</span> Share on LinkedIn
+                                        <button onClick={handleLinkedInShare} disabled={isSharing} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#0a66c2', color: 'white', borderColor: '#0a66c2', height: 'fit-content', opacity: isSharing ? 0.7 : 1, cursor: isSharing ? 'not-allowed' : 'pointer' }}>
+                                            <span>🔗</span> {isSharing ? 'Generating Image...' : 'Share on LinkedIn'}
                                         </button>
                                     </div>
                                 </div>

@@ -164,7 +164,7 @@ Return ONLY a valid JSON object matching this exact structure:
       "<Suggestion 3: Short actionable sentence...>"
   ],
   "pokemon": {
-      "name": "<Extract their actual human Name if possible. If none is provided, invent a short cool moniker like 'The Architect' or 'Visionary'. DO NOT put long job titles here. MAX 2 WORDS.>",
+      "name": "<Extract their actual human Name from the profile/text. If none is found, use 'Unknown User' - DO NOT invent a moniker or use a job title. MAX 2 WORDS.>",
       "title": "<Catchy professional title, MAX 4 WORDS>",
       "photoUrl": "",
       "type": "<e.g., Creative, Engineering, Strategy, Visionary>",
@@ -237,7 +237,7 @@ app.post('/api/generate-card', async (req, res) => {
             reqBody.image_prompt = base64Data;
         } else {
             const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-            prompt = `Typography art, bold cool initials '${initials}'. Abstract background, Studio Ghibli inspired magical aesthetic. Futuristic floating letters in the center. Clean gradient background suitable for a trading card. Cinematic lighting, highly realistic 3D render.`;
+            prompt = `Typography art, bold cool initials '${initials}'. Ensure the letters are scaled down to fit perfectly within frame with generous margins. Lots of negative space around the letters. Abstract background, Studio Ghibli inspired magical aesthetic. Futuristic floating letters in the center. Clean gradient background suitable for a trading card. Cinematic lighting, highly realistic 3D render.`;
             reqBody.prompt = prompt;
         }
 
@@ -279,6 +279,39 @@ app.post('/api/generate-card', async (req, res) => {
     } catch (error) {
         console.error("Flux Error:", error?.response?.data || error.message);
         res.status(500).json({ error: "Failed to generate image" });
+    }
+});
+
+// Endpoint to upload the card to Freeimage.host so it can be shared via URL on LinkedIn
+app.post('/api/upload-image', async (req, res) => {
+    try {
+        const { imageBase64 } = req.body;
+        if (!imageBase64) return res.status(400).json({ error: 'No image provided' });
+
+        const base64Data = imageBase64.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
+
+        // Freeimage.host public API key (6d207e02198a847aa98d0a2a901485a5 works freely for anonymous uploads)
+        const API_KEY = '6d207e02198a847aa98d0a2a901485a5';
+
+        const formData = new URLSearchParams();
+        formData.append('key', API_KEY);
+        formData.append('action', 'upload');
+        formData.append('source', base64Data);
+        formData.append('format', 'json');
+
+        const response = await axios.post('https://freeimage.host/api/1/upload', formData, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+
+        if (response.data && response.data.image && response.data.image.url) {
+            res.json({ url: response.data.image.url });
+        } else {
+            throw new Error('Invalid response from image host');
+        }
+
+    } catch (error) {
+        console.error("Image Upload Error:", error?.response?.data || error.message);
+        res.status(500).json({ error: "Failed to upload image" });
     }
 });
 

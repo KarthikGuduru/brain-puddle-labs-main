@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import fs from 'fs';
+import pdfParse from 'pdf-parse';
 
 dotenv.config();
 
@@ -109,20 +110,43 @@ const generateAnalysis = (input) => {
 
 app.post('/api/analyze', async (req, res) => {
     try {
-        const { input } = req.body;
+        const { type, data } = req.body;
+        // Backward compatibility for old "input" field
+        const fallbackInput = req.body.input || data;
+
+        let extractedText = "";
+
+        if (type === 'pdf') {
+            console.log("Analyzing uploaded PDF Document...");
+            try {
+                const buffer = Buffer.from(data, 'base64');
+                const pdfData = await pdfParse(buffer);
+                extractedText = pdfData.text.substring(0, 10000); // Prevent massive payloads
+            } catch (err) {
+                return res.status(400).json({ error: "Failed to parse PDF document." });
+            }
+        } else if (type === 'url') {
+            // TODO: Relevance AI Integeration placeholder
+            console.log("LinkedIn URL provided - falling back to basic prompt inference until Relevance API added.");
+            extractedText = data; // use URL natively for now
+        } else {
+            console.log("Raw text/bio provided.");
+            extractedText = data || fallbackInput;
+        }
 
         // Log the input to a local file
         const logEntry = {
             timestamp: new Date().toISOString(),
-            input: input
+            type,
+            inputSnippet: extractedText.substring(0, 100) + "..."
         };
         const logFilePath = './uploads_log.json';
 
-        fs.readFile(logFilePath, 'utf8', (err, data) => {
+        fs.readFile(logFilePath, 'utf8', (err, logFile) => {
             let logs = [];
-            if (!err && data) {
+            if (!err && logFile) {
                 try {
-                    logs = JSON.parse(data);
+                    logs = JSON.parse(logFile);
                 } catch (e) {
                     // Ignore parse errors, start fresh
                 }
@@ -136,13 +160,13 @@ app.post('/api/analyze', async (req, res) => {
         if (!process.env.OPENAI_API_KEY) {
             console.log("No OPENAI key found, returning mock data.");
             await new Promise(resolve => setTimeout(resolve, 1500));
-            const analysis = generateAnalysis(input);
+            const analysis = generateAnalysis(extractedText);
             return res.json(analysis);
         }
 
-        console.log(`Analyzing profile via OpenAI for input: ${input}`);
+        console.log(`Analyzing profile via OpenAI for input [${type}]`);
 
-        const prompt = `You are an expert AI workforce analyst and gamification expert. The user has provided the following LinkedIn profile URL or text background: "${input}". 
+        const prompt = `You are an expert AI workforce analyst and gamification expert. The user has provided the following profile text, bio, or background context: \n\n"""\n${extractedText}\n"""\n 
 Analyze their skills and determine how easily they could be replaced by AI. 
 Provide a brutal but fun gamified report card in the style of a Pokémon card. 
 Return ONLY a valid JSON object matching this exact structure:

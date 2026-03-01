@@ -8,6 +8,7 @@ import PokemonCard from '../components/ai-score/PokemonCard';
 const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }) => {
     const [step, setStep] = useState<'input' | 'analyzing' | 'results'>('input');
     const [inputUrl, setInputUrl] = useState('');
+    const [rawText, setRawText] = useState('');
     const [resumeFile, setResumeFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -115,8 +116,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const handleScan = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!inputUrl && !resumeFile) {
-            alert('Please provide either a LinkedIn URL or upload a Resume.');
+        if (!inputUrl && !resumeFile && !rawText.trim()) {
+            alert('Please provide a LinkedIn URL, upload a Resume, or paste your Bio.');
             return;
         }
 
@@ -127,9 +128,27 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             // 1. Fetch analysis
             setTimeout(() => setAnalysisText('Cross-referencing AI capabilities...'), 1000);
 
-            // If we have a resume file, we'd normally parse it. Since we only have a text API, 
-            // we will send the filename + a note to simulate it for now unless we add pdf parsing.
-            const payload = { input: inputUrl || `Resume Uploaded: ${resumeFile?.name || 'User Resume'}` };
+            // Determine input type and payload
+            let type = 'text';
+            let data = rawText.trim();
+
+            if (resumeFile) {
+                type = 'pdf';
+                data = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const base64 = (reader.result as string).split(',')[1];
+                        resolve(base64);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(resumeFile);
+                });
+            } else if (inputUrl) {
+                type = 'url';
+                data = inputUrl;
+            }
+
+            const payload = { type, data };
 
             const response = await fetch('/api/analyze', {
                 method: 'POST',
@@ -138,13 +157,13 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             });
 
             if (!response.ok) throw new Error('Analysis failed');
-            const data = await response.json();
+            const apiData = await response.json();
 
             setAnalysisText('Calculating replaceability index...');
-            setAnalysisData(data);
+            setAnalysisData(apiData);
 
             // Generate the image in the background, we will update it later
-            generateCardImage(data, imagePreview);
+            generateCardImage(apiData, imagePreview);
 
             setTimeout(() => {
                 setStep('results');
@@ -220,8 +239,20 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                             id="linkedin"
                                             placeholder="https://linkedin.com/in/yourprofile"
                                             value={inputUrl}
-                                            onChange={(e) => setInputUrl(e.target.value)}
-                                            style={{ opacity: resumeFile ? 0.5 : 1, pointerEvents: resumeFile ? 'none' : 'auto' }}
+                                            onChange={(e) => { setInputUrl(e.target.value); setRawText(''); setResumeFile(null); }}
+                                            style={{ opacity: resumeFile || rawText ? 0.5 : 1, pointerEvents: resumeFile || rawText ? 'none' : 'auto' }}
+                                        />
+                                    </div>
+                                    <div className="divider" style={{ margin: '1rem 0', fontSize: '0.8rem' }}><span>OR PASTE TEXT</span></div>
+                                    <div className="input-group">
+                                        <label htmlFor="rawText">Bio / Experience</label>
+                                        <textarea
+                                            id="rawText"
+                                            placeholder="Paste your resume text or bio here..."
+                                            value={rawText}
+                                            onChange={(e) => { setRawText(e.target.value); setInputUrl(''); setResumeFile(null); }}
+                                            rows={4}
+                                            style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', color: 'white', opacity: resumeFile || inputUrl ? 0.5 : 1, pointerEvents: resumeFile || inputUrl ? 'none' : 'auto', resize: 'vertical' }}
                                         />
                                     </div>
                                     <div className="input-group" style={{ marginTop: '1rem' }}>
@@ -250,7 +281,11 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                             e.preventDefault();
                                             setIsDragging(false);
                                             const file = e.dataTransfer.files?.[0];
-                                            if (file && file.type === 'application/pdf') setResumeFile(file);
+                                            if (file && file.type === 'application/pdf') {
+                                                setResumeFile(file);
+                                                setInputUrl('');
+                                                setRawText('');
+                                            }
                                         }}
                                         style={{
                                             border: isDragging ? '2px dashed var(--accent-color)' : '1px dashed rgba(255,255,255,0.2)',
@@ -272,7 +307,11 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                                     style={{ display: 'none' }}
                                                     onChange={(e) => {
                                                         const file = e.target.files?.[0];
-                                                        if (file) setResumeFile(file);
+                                                        if (file) {
+                                                            setResumeFile(file);
+                                                            setInputUrl('');
+                                                            setRawText('');
+                                                        }
                                                     }}
                                                 />
                                             </>

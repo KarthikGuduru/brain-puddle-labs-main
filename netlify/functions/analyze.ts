@@ -1,5 +1,8 @@
 import { Handler } from '@netlify/functions';
 import axios from 'axios';
+// @ts-ignore
+import * as pdfParseLib from 'pdf-parse';
+const pdfParse = typeof pdfParseLib === 'function' ? pdfParseLib : (pdfParseLib as any).default || pdfParseLib;
 
 const generateAnalysis = (input: string) => {
     let name = "Professional User";
@@ -57,11 +60,33 @@ export const handler: Handler = async (event, context) => {
     }
 
     try {
-        const { input } = JSON.parse(event.body || '{}');
+        const payload = JSON.parse(event.body || '{}');
+        const { type, data } = payload;
+        const fallbackInput = payload.input || data;
+
+        let extractedText = "";
+
+        if (type === 'pdf') {
+            console.log("Analyzing uploaded PDF Document...");
+            try {
+                const buffer = Buffer.from(data, 'base64');
+                const pdfData = await pdfParse(buffer);
+                extractedText = pdfData.text.substring(0, 10000); // Prevent massive payloads
+            } catch (err) {
+                return { statusCode: 400, body: JSON.stringify({ error: "Failed to parse PDF document." }) };
+            }
+        } else if (type === 'url') {
+            // TODO: Relevance AI Integeration placeholder
+            console.log("LinkedIn URL provided - falling back to basic prompt inference until Relevance API added.");
+            extractedText = data; // use URL natively for now
+        } else {
+            console.log("Raw text/bio provided.");
+            extractedText = data || fallbackInput;
+        }
 
         if (!process.env.OPENAI_API_KEY) {
             console.log("No OPENAI key found, returning mock data.");
-            const analysis = generateAnalysis(input);
+            const analysis = generateAnalysis(extractedText || fallbackInput || "user");
             return {
                 statusCode: 200,
                 headers: { 'Content-Type': 'application/json' },
@@ -69,7 +94,7 @@ export const handler: Handler = async (event, context) => {
             };
         }
 
-        const prompt = `You are an expert AI workforce analyst and gamification expert. The user has provided the following LinkedIn profile URL or text background: "${input}". 
+        const prompt = `You are an expert AI workforce analyst and gamification expert. The user has provided the following profile text, bio, or background context: \n\n"""\n${extractedText}\n"""\n 
 Analyze their skills and determine how easily they could be replaced by AI. 
 Provide a brutal but fun gamified report card in the style of a Pokémon card. 
 Return ONLY a valid JSON object matching this exact structure:

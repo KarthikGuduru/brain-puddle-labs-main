@@ -23,6 +23,21 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const [claimStatus, setClaimStatus] = useState<'idle' | 'loading' | 'success' | 'full' | 'error'>('idle');
     const [claimError, setClaimError] = useState('');
     const [claimForm, setClaimForm] = useState({ name: '', linkedin: '', address: '' });
+    const [claimCount, setClaimCount] = useState<number | null>(null);
+
+    React.useEffect(() => {
+        fetch('/api/claim-card')
+            .then(res => res.json())
+            .then(data => {
+                if (data.remaining !== undefined) {
+                    setClaimCount(data.remaining);
+                    if (data.remaining <= 0) {
+                        setClaimStatus('full');
+                    }
+                }
+            })
+            .catch(err => console.error("Failed to fetch available count", err));
+    }, []);
 
     const handleClaim = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -500,7 +515,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                         <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <span>Claim Physical Card</span>
                                             <span style={{ fontSize: '0.85rem', background: 'var(--accent-color)', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>
-                                                Limited Edition: 100 Available
+                                                Limited Edition: {claimCount === null ? '100' : claimCount} Available
                                             </span>
                                         </h3>
                                         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>

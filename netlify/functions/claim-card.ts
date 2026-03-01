@@ -2,14 +2,33 @@ import { Handler } from '@netlify/functions';
 import axios from 'axios';
 
 export const handler: Handler = async (event, context) => {
-    // Handle GET - Return a hardcoded mock count since we don't have a live DB anymore.
-    // The true count will just be however many rows are in the Google Sheet!
+    // Handle GET - Fetch the live count of rows from the Make.com spreadsheet webhook
     if (event.httpMethod === 'GET') {
-        return {
-            statusCode: 200,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ count: 'Tracking automatically', max: 100 })
-        };
+        try {
+            const countWebhookUrl = process.env.BrainPuddleCheckCount;
+            let remaining = 100;
+
+            if (countWebhookUrl) {
+                const response = await axios.get(countWebhookUrl);
+                // Make.com should be configured to return JSON like { count: 3 }
+                const currentCount = response.data?.count || 0;
+                remaining = Math.max(0, 100 - currentCount);
+            }
+
+            return {
+                statusCode: 200,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ remaining, max: 100 })
+            };
+        } catch (error) {
+            console.error("Failed to fetch count from Make.com", error);
+            // Fallback gracefully so the UI doesn't crash
+            return {
+                statusCode: 200,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ remaining: 100, max: 100 })
+            };
+        }
     }
 
     // Handle POST - claim a card

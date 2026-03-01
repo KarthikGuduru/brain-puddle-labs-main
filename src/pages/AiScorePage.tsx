@@ -206,7 +206,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
     return (
         <main className="main-content ai-score-page" style={{ paddingTop: '6rem', minHeight: '100vh' }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
+            <div className="ai-score-container">
                 <Link to="/" style={{ display: 'inline-block', marginBottom: '2rem', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent-color)' }}>
                     ← Back to Studio
                 </Link>

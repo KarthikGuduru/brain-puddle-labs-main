@@ -37,11 +37,11 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                     const uploadRes = await fetch('/api/upload-image', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ image: dataUrl })
+                        body: JSON.stringify({ imageBase64: dataUrl })
                     });
                     if (uploadRes.ok) {
                         const uploadData = await uploadRes.json();
-                        cardImageUrl = uploadData.imageUrl || '';
+                        cardImageUrl = uploadData.url || '';
                     }
                 }
             } catch (err) {

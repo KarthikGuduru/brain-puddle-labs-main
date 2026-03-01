@@ -91,10 +91,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             if (!uploadRes.ok) throw new Error('Failed to upload image for sharing');
             const { url: imageUrl } = await uploadRes.json();
 
-            // 3. Share text + imageUrl (Branded Proxy)
-            const brandedImageUrl = imageUrl.replace('https://iili.io/', 'https://brainpuddle.com/card/');
-
-            const text = `I just checked my AI Resilience Score on BrainPuddle! My replaceability index is ${analysisData?.score}/100 and I am ranked as ${analysisData?.tier}. \n\nCheck yours here: https://brainpuddle.com/ai-score\n\n${brandedImageUrl}`;
+            // 3. Share text + imageUrl (Raw Link per user request)
+            const text = `I just checked my AI Resilience Score on BrainPuddle! My replaceability index is ${analysisData?.score}/100 and I am ranked as ${analysisData?.tier}. \n\nCheck yours here: https://brainpuddle.com/ai-score\n\n${imageUrl}`;
             const url = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         } catch (error) {

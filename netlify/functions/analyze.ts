@@ -90,7 +90,7 @@ Return ONLY a valid JSON object matching this exact structure:
       "<Suggestion 2: Short actionable sentence...>"
   ],
   "pokemon": {
-      "name": "<Extract their actual human Name if possible. If none is provided, invent a short cool moniker like 'The Architect' or 'Visionary'. DO NOT put long job titles here. MAX 2 WORDS.>",
+      "name": "<Extract their actual human Name from the profile/text. If none is found, use 'Unknown User' - DO NOT invent a moniker or use a job title. MAX 2 WORDS.>",
       "title": "<Catchy professional title, MAX 4 WORDS>",
       "photoUrl": "",
       "type": "<e.g., Creative, Engineering, Strategy, Visionary>",

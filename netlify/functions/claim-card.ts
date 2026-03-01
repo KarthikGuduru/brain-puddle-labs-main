@@ -22,14 +22,14 @@ export const handler: Handler = async (event, context) => {
                 return { statusCode: 400, body: JSON.stringify({ error: "Missing required fields" }) };
             }
 
-            const webhookUrl = process.env.MAKE_WEBHOOK_URL;
+            const webhookUrl = process.env.BrainPuddle;
 
             // If the user hasn't set up the webhook yet, we still return a success so the UI works
             // and we log it so they can see it in Netlify logs.
             if (!webhookUrl) {
                 console.log('--- NEW CARD CLAIM RECEIVED (Setup Pending) ---');
                 console.log(`Name: ${name}\nLinkedIn: ${linkedinUrl}\nAddress: ${address}\nScore: ${score}\nStage: ${pokemonName}`);
-                console.log('Please add MAKE_WEBHOOK_URL to your Netlify Environment Variables to send this to Google Sheets automatically.');
+                console.log('Please add BrainPuddle to your Netlify Environment Variables to send this to Google Sheets automatically.');
 
                 return {
                     statusCode: 200,

@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import axios from 'axios';
-const pdfParse = require('pdf-parse');
+const pdfParse = require('pdf-parse-new');
 
 const generateAnalysis = (input: string) => {
     let name = "Professional User";

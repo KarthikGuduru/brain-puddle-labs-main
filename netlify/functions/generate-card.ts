@@ -28,10 +28,11 @@ export const handler: Handler = async (event, context) => {
         };
 
         if (imagePromptBase64) {
-            prompt = `A highly detailed, stylized 3D avatar of a professional. Abstract, futuristic, Studio Ghibli inspired anime art style, suitable for a gaming or trading card character representing: ${title}. ${type} theme. Centrally focused, waist-up portrait, clean gradient background. Cinematic lighting, rich colors, stylized like a premium anime character. Make sure it visually aligns with the face and structure provided in the reference image.`;
-            reqBody.prompt = prompt;
-            const base64Data = imagePromptBase64.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
-            reqBody.image_prompt = base64Data;
+            return {
+                statusCode: 200,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageUrl: imagePromptBase64 })
+            };
         } else {
             const initials = name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
             prompt = `Typography art, bold cool initials '${initials}'. Abstract background, Studio Ghibli inspired magical aesthetic. Futuristic floating letters zoomed out with plenty of negative space around the letters. The initials must be fully visible and perfectly centered within the frame without being cut off at the edges. Clean gradient background suitable for a trading card. Cinematic lighting, highly realistic 3D render.`;

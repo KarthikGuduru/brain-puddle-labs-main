@@ -230,11 +230,8 @@ app.post('/api/generate-card', async (req, res) => {
         };
 
         if (imagePromptBase64) {
-            prompt = `A highly detailed, stylized 3D avatar of a professional. Abstract, futuristic, Studio Ghibli inspired anime art style, suitable for a gaming or trading card character representing: ${title}. ${type} theme. Centrally focused, waist-up portrait, clean gradient background. Cinematic lighting, rich colors, stylized like a premium anime character. Make sure it visually aligns with the face and structure provided in the reference image.`;
-            reqBody.prompt = prompt;
-            // Ensure base64 prefix is stripped if present
-            const base64Data = imagePromptBase64.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
-            reqBody.image_prompt = base64Data;
+            // User provided their own image - bypass BFL Flux generation entirely per request
+            return res.json({ imageUrl: imagePromptBase64 });
         } else {
             const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
             prompt = `Typography art, bold cool initials '${initials}'. Ensure the letters are scaled down to fit perfectly within frame with generous margins. Lots of negative space around the letters. Abstract background, Studio Ghibli inspired magical aesthetic. Futuristic floating letters in the center. Clean gradient background suitable for a trading card. Cinematic lighting, highly realistic 3D render.`;

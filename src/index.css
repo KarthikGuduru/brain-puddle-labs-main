@@ -181,6 +181,13 @@ body {
   text-align: center;
 }
 
+@media (max-width: 768px) {
+  .hero-section {
+    padding-top: 7rem;
+    padding-bottom: 3rem;
+  }
+}
+
 .hero-content {
   max-width: 900px;
   margin: 0 auto;

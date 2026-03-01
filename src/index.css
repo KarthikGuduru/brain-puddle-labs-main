@@ -156,8 +156,17 @@ body {
   width: 20px;
 }
 
-.nav-menu-btn:hover .line.short {
-  width: 32px;
+.theme-toggle:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+/* AI Score Nav Link Highlight */
+.nav-desktop-links a[href="/ai-score"],
+.mobile-menu-overlay a[href="/ai-score"] {
+  color: #ffcc00 !important;
+  font-weight: 700 !important;
+  text-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
 }
 
 /* Hero Section Styles */
@@ -221,13 +230,14 @@ body {
 }
 
 .announcement-badge {
-  background: var(--primary);
-  color: #000;
+  background: #ffcc00;
+  color: #111;
   padding: 0.2rem 0.6rem;
   border-radius: 100px;
-  font-weight: 700;
-  font-size: 0.7rem;
+  font-weight: 800;
+  font-size: 0.75rem;
   letter-spacing: 0.05em;
+  box-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
 }
 
 .announcement-text {

@@ -16,6 +16,49 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const [analysisData, setAnalysisData] = useState<any>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [isSharing, setIsSharing] = useState(false);
+    const [claimCount, setClaimCount] = useState(0);
+    const [claimStatus, setClaimStatus] = useState<'idle' | 'loading' | 'success' | 'full' | 'error'>('idle');
+    const [claimError, setClaimError] = useState('');
+    const [claimForm, setClaimForm] = useState({ name: '', linkedin: '', address: '' });
+
+    React.useEffect(() => {
+        fetch('/api/claim-card')
+            .then(res => res.json())
+            .then(data => {
+                if (data.count !== undefined) {
+                    setClaimCount(data.count);
+                    if (data.count >= 100) setClaimStatus('full');
+                }
+            })
+            .catch(err => console.error("Failed to fetch claim count", err));
+    }, []);
+
+    const handleClaim = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setClaimStatus('loading');
+        try {
+            const res = await fetch('/api/claim-card', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: claimForm.name,
+                    linkedinUrl: claimForm.linkedin,
+                    address: claimForm.address
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setClaimStatus('success');
+                setClaimCount(data.count);
+            } else {
+                setClaimStatus('error');
+                setClaimError(data.error || 'Failed to claim card');
+            }
+        } catch (error) {
+            setClaimStatus('error');
+            setClaimError('Network error');
+        }
+    };
 
     const captureBothSides = async () => {
         if (!cardRef.current) return null;
@@ -422,6 +465,39 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                             <span>🔗</span> {isSharing ? 'Generating Image...' : 'Share on LinkedIn'}
                                         </button>
                                     </div>
+
+                                    <div className="claim-card-section glass" style={{ width: '100%', padding: '1.5rem', marginTop: '1rem', borderRadius: '1rem' }}>
+                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span>Claim Physical Card</span>
+                                            <span style={{ fontSize: '0.85rem', background: 'var(--accent-color)', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>
+                                                {claimCount}/100 Claimed
+                                            </span>
+                                        </h3>
+                                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                                            First 100 users get a premium holographic physical print of their card delivered for free!
+                                        </p>
+
+                                        {claimStatus === 'success' ? (
+                                            <div style={{ padding: '1rem', background: 'rgba(76, 175, 80, 0.1)', color: '#4caf50', borderRadius: '8px', textAlign: 'center', fontWeight: 'bold' }}>
+                                                🎉 Claim successful! Your card is in the queue.
+                                            </div>
+                                        ) : claimStatus === 'full' ? (
+                                            <div style={{ padding: '1rem', background: 'rgba(244, 67, 54, 0.1)', color: '#f44336', borderRadius: '8px', textAlign: 'center', fontWeight: 'bold' }}>
+                                                Sorry, all 100 cards have been claimed!
+                                            </div>
+                                        ) : (
+                                            <form onSubmit={handleClaim} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                                <input required type="text" placeholder="Full Name" value={claimForm.name} onChange={e => setClaimForm({ ...claimForm, name: e.target.value })} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)', background: 'var(--bg-dark)' }} />
+                                                <input required type="url" placeholder="LinkedIn Profile URL" value={claimForm.linkedin} onChange={e => setClaimForm({ ...claimForm, linkedin: e.target.value })} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)', background: 'var(--bg-dark)' }} />
+                                                <textarea required placeholder="Delivery Address" value={claimForm.address} onChange={e => setClaimForm({ ...claimForm, address: e.target.value })} rows={2} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)', background: 'var(--bg-dark)', resize: 'vertical' }} />
+                                                <button type="submit" disabled={claimStatus === 'loading'} className="btn-primary" style={{ marginTop: '0.5rem', opacity: claimStatus === 'loading' ? 0.7 : 1 }}>
+                                                    {claimStatus === 'loading' ? 'Claiming...' : 'Claim My Free Card'}
+                                                </button>
+                                                {claimStatus === 'error' && <div style={{ color: '#f44336', fontSize: '0.8rem', textAlign: 'center' }}>{claimError}</div>}
+                                            </form>
+                                        )}
+                                    </div>
+
                                 </div>
                             </div>
                         </motion.div>

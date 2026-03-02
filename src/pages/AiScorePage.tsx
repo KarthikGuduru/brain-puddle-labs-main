@@ -93,8 +93,24 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         frontEl.style.transform = 'none';
         backEl.style.transform = 'none';
 
+        // Save current display states
+        const oldBackDisplay = backEl.style.display;
+        const oldFrontDisplay = frontEl.style.display;
+
         try {
+            // ONLY explicitly show FRONT, completely hide BACK to avoid iOS Safari bleed
+            backEl.style.display = 'none';
+            frontEl.style.display = 'block'; // or flex etc, block is safe for capture
+
+            // Allow DOM to update before capture
+            await new Promise(resolve => setTimeout(resolve, 50));
             const frontCanvas = await html2canvas(frontEl, opts);
+
+            // ONLY explicitly show BACK, completely hide FRONT
+            frontEl.style.display = 'none';
+            backEl.style.display = 'block';
+
+            await new Promise(resolve => setTimeout(resolve, 50));
             const backCanvas = await html2canvas(backEl, opts);
 
             const gap = 40;
@@ -117,6 +133,9 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
             return canvas;
         } finally {
+            // Restore visibility!
+            backEl.style.display = oldBackDisplay;
+            frontEl.style.display = oldFrontDisplay;
             if (innerEl) innerEl.style.transform = oldInnerTransform;
             frontEl.style.transform = oldFrontTransform;
             backEl.style.transform = oldBackTransform;
@@ -273,6 +292,14 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                     // Compress to JPEG with 0.8 quality to prevent "Payload Too Large"
                     const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
                     setImagePreview(dataUrl);
+
+                    // Auto-scroll the submit button back into view for mobile users
+                    setTimeout(() => {
+                        const scanBtn = document.querySelector('.scan-btn');
+                        if (scanBtn) {
+                            scanBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 100);
                 };
                 if (event.target?.result) {
                     img.src = event.target.result as string;

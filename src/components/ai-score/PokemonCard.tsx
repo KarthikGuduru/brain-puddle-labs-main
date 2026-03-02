@@ -128,7 +128,7 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
     const darkStatColors = statColors.map(darkenRgbString);
 
     return (
-        <div ref={ref} className="pokemon-card-container" onClick={() => setIsFlipped(!isFlipped)}>
+        <div ref={ref} className={`pokemon-card-container ${!isFlipped ? 'front-focused' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
             <motion.div
                 className="pokemon-card-inner"
                 animate={{ rotateY: isFlipped ? 180 : 0 }}
@@ -138,6 +138,8 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
                 {/* Front */}
                 <div className="pokemon-card-front" style={{ background: typeGradient }}>
                     <div className="card-foil-overlay"></div>
+                    <div className="card-shine-sweep"></div>
+                    <div className="card-sparkle-overlay"></div>
 
                     <div className="card-header">
                         <div className="card-stage">{replaceabilityTier ? replaceabilityTier.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim().toUpperCase() : stage.toUpperCase()}</div>

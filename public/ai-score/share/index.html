@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BrainPuddle AI Resilience Score</title>
+  <meta name="description" content="Check your AI Resilience Score on BrainPuddle and see how automation-ready your role is." />
+  <link rel="canonical" href="https://brainpuddle.com/ai-score" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="BrainPuddle" />
+  <meta property="og:title" content="BrainPuddle AI Resilience Score" />
+  <meta property="og:description" content="Run the AI Score scanner to see your replaceability index and how to level up." />
+  <meta property="og:url" content="https://brainpuddle.com/ai-score" />
+  <meta property="og:image" content="https://brainpuddle.com/consultation-hero.png" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="BrainPuddle AI Resilience Score" />
+  <meta name="twitter:description" content="Run the AI Score scanner to see your replaceability index and how to level up." />
+  <meta name="twitter:image" content="https://brainpuddle.com/consultation-hero.png" />
+</head>
+
+<body style="font-family: Inter, Arial, sans-serif; padding: 2rem; background: #f9f9f9; color: #111;">
+  <h1 style="font-size: 1.5rem; margin-bottom: 0.75rem;">Opening shared AI Score...</h1>
+  <p style="line-height: 1.5;">If you are not redirected automatically, <a id="fallback-link" href="/ai-score/shared">open the shared result</a>.</p>
+
+  <noscript>
+    <meta http-equiv="refresh" content="1; url=/ai-score/shared" />
+  </noscript>
+
+  <script>
+    (function () {
+      const query = window.location.search || '';
+      const target = '/ai-score/shared' + query;
+      const fallback = document.getElementById('fallback-link');
+      if (fallback) fallback.href = target;
+      window.setTimeout(function () {
+        window.location.replace(target);
+      }, 800);
+    })();
+  </script>
+</body>
+
+</html>

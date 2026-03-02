@@ -9,11 +9,18 @@ import VoiceAgentsPage from './pages/VoiceAgentsPage';
 import ConsultationPage from './pages/ConsultationPage';
 import ContentCreationPage from './pages/ContentCreationPage';
 import AiScorePage from './pages/AiScorePage';
+import AiScoreSharedPage from './pages/AiScoreSharedPage';
+import OpsDashboardPage from './pages/OpsDashboardPage';
+import { initAnalytics, trackEvent } from './lib/analytics';
+import { featureFlags } from './lib/features';
+import { applySeoForPath } from './lib/seo';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
     window.scrollTo(0, 0);
+    trackEvent('page_view', { path: pathname });
+    applySeoForPath(pathname);
   }, [pathname]);
   return null;
 }
@@ -26,6 +33,10 @@ function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   }, [dark]);
+
+  useEffect(() => {
+    initAnalytics();
+  }, []);
 
   return (
     <div className="app-container">
@@ -45,6 +56,9 @@ function App() {
           <Route path="/consultation" element={<ConsultationPage onContactOpen={() => setContactOpen(true)} />} />
           <Route path="/content-creation" element={<ContentCreationPage onContactOpen={() => setContactOpen(true)} />} />
           <Route path="/ai-score" element={<AiScorePage onContactOpen={() => setContactOpen(true)} />} />
+          <Route path="/ai-score/shared" element={<AiScoreSharedPage onContactOpen={() => setContactOpen(true)} />} />
+          <Route path="/ai-score/shared/:payload" element={<AiScoreSharedPage onContactOpen={() => setContactOpen(true)} />} />
+          {featureFlags.opsDash && <Route path="/internal/ops" element={<OpsDashboardPage />} />}
         </Routes>
       </div>
 

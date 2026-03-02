@@ -3,8 +3,18 @@
   publish = "dist"
 
 [[redirects]]
+  from = "/api/share-card/create"
+  to = "/.netlify/functions/share-card-create"
+  status = 200
+
+[[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/s/*"
+  to = "/.netlify/functions/share-resolve?id=:splat"
   status = 200
 
 [[redirects]]

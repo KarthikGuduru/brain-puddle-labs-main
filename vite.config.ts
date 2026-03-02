@@ -8,7 +8,13 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
-        changeOrigin: true
+        changeOrigin: true,
+        xfwd: true
+      },
+      '^/s/.*': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        xfwd: true
       }
     }
   }

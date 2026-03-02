@@ -1,8 +1,33 @@
 import { Handler } from '@netlify/functions';
 import axios from 'axios';
 
+const getLinkedInSlug = (url: string) => {
+    try {
+        const parsed = new URL(url);
+        const segments = parsed.pathname.split('/').filter(Boolean);
+        const inIndex = segments.indexOf('in');
+        const slug = inIndex >= 0 ? segments[inIndex + 1] : segments[segments.length - 1];
+        return slug || "";
+    } catch {
+        const match = String(url || "").match(/linkedin\.com\/in\/([^/?#]+)/i);
+        return match?.[1] || "";
+    }
+};
+
+const formatLinkedInSlugName = (slug: string) =>
+    String(slug || "")
+        .replace(/[-_]+/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .trim();
+
+const buildLinkedInFallbackText = (url: string) => {
+    const slug = getLinkedInSlug(url);
+    const guessedName = formatLinkedInSlugName(slug) || "Unknown User";
+    return `LinkedIn profile scraping was unavailable. Treat this as a URL-only profile. Probable name from slug: ${guessedName}. Infer broad professional capabilities without niche hallucinations.`;
+};
+
 const generateAnalysis = (input: string) => {
-    let name = "Professional User";
+    let name = formatLinkedInSlugName(getLinkedInSlug(input)) || "Professional User";
     let isKarthik = input.toLowerCase().includes('karthik-guduru');
 
     if (isKarthik) {
@@ -68,31 +93,33 @@ export const handler: Handler = async (event, context) => {
             extractedText = "User uploaded a PDF resume. Assume they have high technical depth and organizational skills.";
         } else if (type === 'url') {
             console.log("LinkedIn URL provided - calling Relevance AI webhook.");
-            try {
-                if (!process.env.RELEVANCE_WEBHOOK_URL || !process.env.RELEVANCE_API_KEY) {
-                    throw new Error("Missing Relevance API config");
-                }
-                const relevanceRes = await axios.post(
-                    process.env.RELEVANCE_WEBHOOK_URL,
-                    { url: data, name: "" },
-                    {
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": process.env.RELEVANCE_API_KEY
-                        },
-                        timeout: 25000 // 25s timeout for scraper
-                    }
-                );
-                const output = relevanceRes.data?.output || relevanceRes.data || "";
-                extractedText = typeof output === 'string' ? output : JSON.stringify(output);
+            if (!process.env.RELEVANCE_WEBHOOK_URL || !process.env.RELEVANCE_API_KEY) {
+                console.warn("Relevance API config missing. Falling back to URL-only analysis.");
+                extractedText = buildLinkedInFallbackText(data || fallbackInput || "");
+            } else {
+                try {
+                    const relevanceRes = await axios.post(
+                        process.env.RELEVANCE_WEBHOOK_URL,
+                        { url: data, name: "" },
+                        {
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": process.env.RELEVANCE_API_KEY
+                            },
+                            timeout: 25000 // 25s timeout for scraper
+                        }
+                    );
+                    const output = relevanceRes.data?.output || relevanceRes.data || "";
+                    extractedText = typeof output === 'string' ? output : JSON.stringify(output);
 
-                // Truncate to avoid exceeding OpenAI context limits
-                if (extractedText.length > 15000) {
-                    extractedText = extractedText.substring(0, 15000) + '...';
+                    // Truncate to avoid exceeding OpenAI context limits
+                    if (extractedText.length > 15000) {
+                        extractedText = extractedText.substring(0, 15000) + '...';
+                    }
+                } catch (err: any) {
+                    console.error("Relevance API Error:", err.response?.data || err.message);
+                    extractedText = buildLinkedInFallbackText(data || fallbackInput || "");
                 }
-            } catch (err: any) {
-                console.error("Relevance API Error:", err.response?.data || err.message);
-                return { statusCode: 500, body: JSON.stringify({ error: "Failed to scrape LinkedIn profile. Please try uploading a PDF Resume or Paste your text instead." }) };
             }
         } else {
             console.log("Raw text/bio provided.");
@@ -101,7 +128,10 @@ export const handler: Handler = async (event, context) => {
 
         if (!process.env.OPENAI_API_KEY) {
             console.log("No OPENAI key found, returning mock data.");
-            const analysis = generateAnalysis(extractedText || fallbackInput || "user");
+            const analysisSeed = type === 'url'
+                ? `${data || fallbackInput || ""}\n${extractedText || ""}`
+                : (extractedText || fallbackInput || "user");
+            const analysis = generateAnalysis(analysisSeed);
             return {
                 statusCode: 200,
                 headers: { 'Content-Type': 'application/json' },

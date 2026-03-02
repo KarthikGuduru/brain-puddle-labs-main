@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { trackEvent } from '../lib/analytics';
 
 interface NavigationProps {
     dark: boolean;
@@ -28,7 +29,8 @@ const MoonIcon = () => (
     </svg>
 );
 
-const Navigation: React.FC<NavigationProps> = ({ dark, onToggleTheme, onContactOpen: _onContactOpen }) => {
+const Navigation: React.FC<NavigationProps> = ({ dark, onToggleTheme, onContactOpen }) => {
+    void onContactOpen;
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
@@ -47,11 +49,11 @@ const Navigation: React.FC<NavigationProps> = ({ dark, onToggleTheme, onContactO
 
                 {/* Desktop links */}
                 <div className="nav-desktop-links">
-                    <Link to="/voice-agents" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Voice Agents</Link>
-                    <Link to="/consultation" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Consultation</Link>
-                    <Link to="/content-creation" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Content</Link>
-                    <Link to="/ai-score" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>AI Score</Link>
-                    <a href="https://learnpuddle.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>LearnPuddle</a>
+                    <Link to="/voice-agents" onClick={() => trackEvent('nav_click', { tab: 'voice_agents' })} style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Voice Agents</Link>
+                    <Link to="/consultation" onClick={() => trackEvent('nav_click', { tab: 'consultation' })} style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Consultation</Link>
+                    <Link to="/content-creation" onClick={() => trackEvent('nav_click', { tab: 'content' })} style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>Content</Link>
+                    <Link to="/ai-score" onClick={() => trackEvent('nav_click', { tab: 'ai_score' })} style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>AI Score</Link>
+                    <a href="https://learnpuddle.com" target="_blank" rel="noopener noreferrer" onClick={() => trackEvent('nav_click', { tab: 'learnpuddle' })} style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', transition: 'color 0.2s' }}>LearnPuddle</a>
 
                     <button className="theme-toggle" onClick={onToggleTheme} aria-label="Toggle theme">
                         <div className="theme-toggle-knob">
@@ -89,11 +91,11 @@ const Navigation: React.FC<NavigationProps> = ({ dark, onToggleTheme, onContactO
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
                     >
-                        <Link to="/voice-agents" onClick={() => setMobileMenuOpen(false)}>Voice Agents</Link>
-                        <Link to="/consultation" onClick={() => setMobileMenuOpen(false)}>Consultation</Link>
-                        <Link to="/content-creation" onClick={() => setMobileMenuOpen(false)}>Content</Link>
-                        <Link to="/ai-score" onClick={() => setMobileMenuOpen(false)}>AI Score</Link>
-                        <a href="https://learnpuddle.com" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}>LearnPuddle</a>
+                        <Link to="/voice-agents" onClick={() => { setMobileMenuOpen(false); trackEvent('nav_click', { tab: 'voice_agents', mobile: true }); }}>Voice Agents</Link>
+                        <Link to="/consultation" onClick={() => { setMobileMenuOpen(false); trackEvent('nav_click', { tab: 'consultation', mobile: true }); }}>Consultation</Link>
+                        <Link to="/content-creation" onClick={() => { setMobileMenuOpen(false); trackEvent('nav_click', { tab: 'content', mobile: true }); }}>Content</Link>
+                        <Link to="/ai-score" onClick={() => { setMobileMenuOpen(false); trackEvent('nav_click', { tab: 'ai_score', mobile: true }); }}>AI Score</Link>
+                        <a href="https://learnpuddle.com" target="_blank" rel="noopener noreferrer" onClick={() => { setMobileMenuOpen(false); trackEvent('nav_click', { tab: 'learnpuddle', mobile: true }); }}>LearnPuddle</a>
                     </motion.div>
                 )}
             </AnimatePresence>

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /internal/
+Disallow: /api/
+Disallow: /.netlify/functions/
+
+Sitemap: https://brainpuddle.com/sitemap.xml

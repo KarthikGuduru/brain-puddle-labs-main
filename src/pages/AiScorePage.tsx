@@ -677,12 +677,12 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                         <div style={{ marginTop: '2rem', marginBottom: '2rem', textAlign: 'center', background: 'var(--bg-dark)', border: 'var(--glass-border)', borderRadius: '1.2rem', padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.4rem' }}>The Evolution of AI Resilience</h3>
                             <p style={{ margin: '0 0 2rem 0', color: 'var(--text-secondary)', maxWidth: '600px', lineHeight: 1.6 }}>
-                                Move from being easily replaceable by automated workflows to an AI orchestrator orchestrating complex human-in-the-loop systems.
+                                Level up your career by evolving from an Execution Specialist into a Visionary AI Orchestrator guiding complex human-in-the-loop systems.
                             </p>
 
                             <img
                                 src="/ai-resilience-evolution.png"
-                                alt="Evolution from low resilience manual worker to high resilience AI architect"
+                                alt="Evolution from Execution Specialist to high resilience AI orchestrator"
                                 style={{ maxWidth: '100%', height: 'auto', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}
                                 loading="lazy"
                             />

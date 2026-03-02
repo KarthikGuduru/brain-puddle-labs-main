@@ -78,7 +78,7 @@ export const handler: Handler = async (event) => {
             if (idx === -1) return '';
             return decodeURIComponent(p.slice(idx + marker.length)).trim();
         })();
-        const shareId = fromQuery || fromPath;
+        const shareId = (fromQuery || fromPath).replace(/^\/+/, '');
         const origin = resolveSiteOrigin(event.headers as Record<string, string | undefined>);
         if (!shareId) {
             return {

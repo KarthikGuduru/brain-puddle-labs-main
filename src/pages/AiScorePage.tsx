@@ -686,22 +686,25 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                 style={{ maxWidth: '100%', height: 'auto', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}
                                 loading="lazy"
                             />
-                        </div>
 
-                        <h3 style={{ margin: '0.2rem 0 0.8rem 0', fontSize: '1.08rem' }}>FAQ</h3>
-                        <div style={{ display: 'grid', gap: '0.7rem' }}>
-                            <details style={{ border: 'var(--glass-border)', borderRadius: '0.85rem', padding: '0.85rem 1rem', background: 'var(--bg-dark)' }}>
-                                <summary style={{ cursor: 'pointer', fontWeight: 700 }}>What does AI Resilience Score mean?</summary>
-                                <p style={{ margin: '0.55rem 0 0 0', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                                    It is a 0-100 measure of your career's defense against automation. A higher score means you are highly resilient and securely positioned.
-                                </p>
-                            </details>
-                            <details style={{ border: 'var(--glass-border)', borderRadius: '0.85rem', padding: '0.85rem 1rem', background: 'var(--bg-dark)' }}>
-                                <summary style={{ cursor: 'pointer', fontWeight: 700 }}>What is an AI-Resistant Tier?</summary>
-                                <p style={{ margin: '0.55rem 0 0 0', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                                    The AI-Resistant Tier groups your score into practical resilience bands, making the result easier to act on.
-                                </p>
-                            </details>
+                            {/* Grading Labels */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', width: '100%', marginTop: '1.5rem', gap: '1rem' }}>
+                                <div>
+                                    <span style={{ color: '#F25F22', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>&lt; 30 Score</span>
+                                    <h4 style={{ margin: '0.4rem 0 0 0', fontSize: '1rem', color: 'var(--text-primary)' }}>Highly Replaceable</h4>
+                                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Execution Focus</p>
+                                </div>
+                                <div>
+                                    <span style={{ color: '#F25F22', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>30 - 59 Score</span>
+                                    <h4 style={{ margin: '0.4rem 0 0 0', fontSize: '1rem', color: 'var(--text-primary)' }}>At Risk</h4>
+                                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Mixed Workflows</p>
+                                </div>
+                                <div>
+                                    <span style={{ color: '#F25F22', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>60+ Score</span>
+                                    <h4 style={{ margin: '0.4rem 0 0 0', fontSize: '1rem', color: 'var(--text-primary)' }}>AI-Resistant</h4>
+                                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Orchestration Focus</p>
+                                </div>
+                            </div>
                         </div>
                     </section>
                 )}

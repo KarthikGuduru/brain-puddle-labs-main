@@ -78,7 +78,20 @@ export const handler: Handler = async (event) => {
             if (idx === -1) return '';
             return decodeURIComponent(p.slice(idx + marker.length)).trim();
         })();
-        const shareId = (fromQuery || fromPath).replace(/^\/+/, '');
+        const fromRawUrl = (() => {
+            try {
+                const raw = String((event as { rawUrl?: string }).rawUrl || '').trim();
+                if (!raw) return '';
+                const parsed = new URL(raw);
+                const marker = '/s/';
+                const idx = parsed.pathname.indexOf(marker);
+                if (idx === -1) return '';
+                return decodeURIComponent(parsed.pathname.slice(idx + marker.length)).trim();
+            } catch {
+                return '';
+            }
+        })();
+        const shareId = (fromQuery || fromPath || fromRawUrl).replace(/^\/+/, '');
         const origin = resolveSiteOrigin(event.headers as Record<string, string | undefined>);
         if (!shareId) {
             return {

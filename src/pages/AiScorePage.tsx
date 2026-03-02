@@ -171,6 +171,9 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         setIsSharing(true);
         trackEvent('ai_share_clicked', { aiRunId: aiRunId || null });
 
+        // Let React render the loading UI before starting the massive synchronous thread execution
+        await new Promise(resolve => setTimeout(resolve, 50));
+
         try {
             const canvas = await captureBothSides();
             let sharedViaNativeSheet = false;

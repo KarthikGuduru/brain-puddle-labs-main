@@ -34,10 +34,30 @@ const generateAnalysis = (input: string) => {
         name = "Karthik";
     }
 
+    const rawScore = isKarthik ? 35 : 75 + Math.floor(Math.random() * 20); // Old replaceability mock
+    const resilienceScore = 100 - rawScore;
+
+    let tierName = "⚠️ Highly Replaceable";
+    let tierColorHex = "#F25F22"; // Rams Orange
+    let typeName = "Execution";
+    let stageName = "Execution Specialist";
+
+    if (resilienceScore >= 60) {
+        tierName = "🛡️ AI-Resistant";
+        tierColorHex = "#4caf50";
+        typeName = "Visionary";
+        stageName = "AI Orchestrator";
+    } else if (resilienceScore >= 30) {
+        tierName = "⚡ At Risk";
+        tierColorHex = "#ffeb3b";
+        typeName = "Adapter";
+        stageName = "Strategic Innovator";
+    }
+
     return {
-        score: isKarthik ? 35 : 75 + Math.floor(Math.random() * 20),
-        tier: isKarthik ? "🛡️ AI-Resistant" : "⚠️ Automatable",
-        tierColor: isKarthik ? "#2b5cff" : "#ff4d4d",
+        score: rawScore, // Keeping the raw score intact for backward compatibility if needed, frontend inverses it.
+        tier: tierName,
+        tierColor: tierColorHex,
         categories: [
             { name: "Creative Strategy", score: isKarthik ? 95 : 40 + Math.floor(Math.random() * 30), max: 100 },
             { name: "Technical Depth", score: isKarthik ? 92 : 50 + Math.floor(Math.random() * 30), max: 100 },
@@ -54,8 +74,8 @@ const generateAnalysis = (input: string) => {
             name: name,
             title: isKarthik ? "The Architect" : "Operations Specialist",
             photoUrl: "",
-            type: isKarthik ? "Visionary" : "Execution",
-            stage: isKarthik ? "Master Level" : "Basic Level",
+            type: typeName,
+            stage: stageName,
             hp: isKarthik ? 290 : 120 + Math.floor(Math.random() * 50),
             skills: isKarthik ? ["Systems Thinking", "AI Integration", "Product Strategy", "Client Empathy"] : ["Data Entry", "Basic Reporting", "Schedule Management", "Email Triage"],
             stats: {
@@ -143,8 +163,6 @@ Return ONLY a valid JSON object matching this exact structure:
 
 {
   "score": <number 0-100, where lower means harder to replace, higher means easily replacable>,
-  "tier": "<Emoji and Tier Name, e.g. 🛡️ AI-Resistant or ⚠️ Automatable>",
-  "tierColor": "<Hex color representing the tier>",
   "categories": [
       { "name": "Creative Strategy", "score": <0-100>, "max": 100 },
       { "name": "Technical Depth", "score": <0-100>, "max": 100 },
@@ -195,6 +213,34 @@ NOTE ON HALLUCINATIONS: If the input is just a URL without deep body text, DO NO
         });
 
         const analysis = JSON.parse(gptRes.data.choices[0].message.content);
+
+        // Deterministically enforce the Resilience 3-stage tiers for all user-facing labels
+        const resilienceScore = 100 - (analysis.score || 0);
+
+        let finalTier = "⚠️ Highly Replaceable";
+        let finalColor = "#F25F22"; // Rams Orange
+        let finalType = "Execution";
+        let finalStage = "Execution Specialist";
+
+        if (resilienceScore >= 60) {
+            finalTier = "🛡️ AI-Resistant";
+            finalColor = "#4caf50";
+            finalType = "Visionary";
+            finalStage = "AI Orchestrator";
+        } else if (resilienceScore >= 30) {
+            finalTier = "⚡ At Risk";
+            finalColor = "#ffeb3b";
+            finalType = "Adapter";
+            finalStage = "Strategic Innovator";
+        }
+
+        analysis.tier = finalTier;
+        analysis.tierColor = finalColor;
+        if (analysis.pokemon) {
+            analysis.pokemon.type = finalType;
+            analysis.pokemon.stage = finalStage;
+        }
+
         return {
             statusCode: 200,
             headers: { 'Content-Type': 'application/json' },

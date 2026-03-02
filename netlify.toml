@@ -17,7 +17,7 @@
 
 [[redirects]]
   from = "/s/*"
-  to = "/.netlify/functions/share-resolve/:splat"
+  to = "/.netlify/functions/share-resolve?id=:splat"
   status = 200
 
 ## PostHog reverse proxy (reduces adblock impact)

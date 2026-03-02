@@ -8,6 +8,15 @@ const getConfig = () => ({
     host: (import.meta.env.VITE_POSTHOG_HOST as string | undefined)?.trim() || 'https://us.i.posthog.com'
 });
 
+const getUiHost = () => {
+    const explicit = (import.meta.env.VITE_POSTHOG_UI_HOST as string | undefined)?.trim();
+    if (explicit) return explicit;
+    const { host } = getConfig();
+    if (host.includes('eu.i.posthog.com')) return 'https://eu.posthog.com';
+    if (host.includes('us.i.posthog.com')) return 'https://us.posthog.com';
+    return 'https://app.posthog.com';
+};
+
 const getApiHost = () => {
     const { host } = getConfig();
     // In production we prefer reverse-proxying through our own domain to reduce adblock impact.
@@ -27,10 +36,15 @@ export const initAnalytics = () => {
 
     posthog.init(key, {
         api_host: getApiHost(),
-        // SPA: we emit $pageview manually on route changes.
-        capture_pageview: false,
+        ui_host: getUiHost(),
+        // Track SPA route changes and power web analytics checks.
+        defaults: '2025-05-24',
+        capture_pageview: 'history_change',
         capture_pageleave: true,
-        autocapture: false,
+        // Enables scroll depth and other web analytics enrichment.
+        autocapture: true,
+        // Enable LCP/CLS/INP collection without waiting for server-side override.
+        capture_performance: true,
         person_profiles: 'identified_only'
     });
     initialized = true;
@@ -43,15 +57,10 @@ export const trackEvent = (event: string, properties?: Record<string, unknown>) 
     posthog.capture(event, properties || {});
 };
 
-// PostHog Web Analytics expects $pageview. For SPA route changes, emit it manually.
+// Keep a custom event for internal dashboards; PostHog handles $pageview automatically.
 export const trackPageView = (path?: string) => {
     initAnalytics();
     const { key } = getConfig();
     if (!key) return;
-    posthog.capture('$pageview', {
-        ...(path ? { path } : {}),
-        $current_url: typeof window !== 'undefined' ? window.location.href : undefined
-    });
-    // Keep a stable custom event for internal dashboards.
     trackEvent('page_view', { ...(path ? { path } : {}) });
 };

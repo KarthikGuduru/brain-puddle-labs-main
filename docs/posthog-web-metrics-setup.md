@@ -13,6 +13,8 @@ Set in Netlify (or local `.env`):
 ```bash
 VITE_POSTHOG_KEY=phc_xxxxx
 VITE_POSTHOG_HOST=https://us.i.posthog.com
+# Optional, only if you want explicit UI host in links
+VITE_POSTHOG_UI_HOST=https://us.posthog.com
 ```
 
 Current analytics bootstrap is in [analytics.ts](/Users/rakeshreddy/Downloads/BrainpuddleWebsite/brainpuddle-website/src/lib/analytics.ts).
@@ -76,7 +78,23 @@ These events are already emitted in this codebase:
 4. Submit claim:
 - verify `claim_form_submitted` and `claim_form_success`.
 
-## 7) Troubleshooting
+5. Verify PostHog web analytics checks:
+- `$pageview`: should appear automatically (SDK `capture_pageview: 'history_change'`).
+- `$pageleave`: should appear automatically (`capture_pageleave: true`).
+- `Scroll depth`: enabled via `autocapture: true`.
+- `Reverse proxy`: requests should go to `https://brainpuddle.com/ingest/*`.
+- `$web_vitals`: emitted after real page load interactions.
+
+## 7) PostHog UI Setup (Required)
+1. In PostHog: **Project settings -> Authorized URLs**, add:
+- `https://brainpuddle.com`
+- `https://www.brainpuddle.com` (if live)
+- Netlify production URL (if used directly)
+- `http://localhost:5173` (optional for local testing)
+
+2. No wildcards are allowed by PostHog in Authorized URLs.
+
+## 8) Troubleshooting
 1. No events visible:
 - check `VITE_POSTHOG_KEY` and `VITE_POSTHOG_HOST`.
 - ensure build/runtime env vars are present in deployed environment.
@@ -84,3 +102,9 @@ These events are already emitted in this codebase:
 - re-deploy after updating Netlify env vars.
 3. CORS/network blocks:
 - verify PostHog host region matches project.
+4. Reverse proxy check still failing:
+- confirm both rules exist in Netlify redirects:
+  - `/ingest/static/* -> https://us.i.posthog.com/static/:splat`
+  - `/ingest/* -> https://us.i.posthog.com/:splat`
+5. Region mismatch (EU project):
+- replace both redirect targets with `https://eu.i.posthog.com/...` and set `VITE_POSTHOG_HOST=https://eu.i.posthog.com`.

@@ -2,6 +2,9 @@
   command = "bun run build"
   publish = "dist"
 
+[build.environment]
+  NODE_VERSION = "20.19.0"
+
 [[redirects]]
   from = "/api/share-card/create"
   to = "/.netlify/functions/share-card-create"
@@ -15,6 +18,18 @@
 [[redirects]]
   from = "/s/*"
   to = "/.netlify/functions/share-resolve?id=:splat"
+  status = 200
+
+## PostHog reverse proxy (reduces adblock impact)
+## If your project is in EU, change the target host accordingly.
+[[redirects]]
+  from = "/ingest/static/*"
+  to = "https://us.i.posthog.com/static/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/ingest/*"
+  to = "https://us.i.posthog.com/:splat"
   status = 200
 
 [[redirects]]

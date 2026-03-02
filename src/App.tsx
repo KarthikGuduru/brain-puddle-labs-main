@@ -11,7 +11,7 @@ import ContentCreationPage from './pages/ContentCreationPage';
 import AiScorePage from './pages/AiScorePage';
 import AiScoreSharedPage from './pages/AiScoreSharedPage';
 import OpsDashboardPage from './pages/OpsDashboardPage';
-import { initAnalytics, trackEvent } from './lib/analytics';
+import { initAnalytics, trackPageView } from './lib/analytics';
 import { featureFlags } from './lib/features';
 import { applySeoForPath } from './lib/seo';
 
@@ -19,7 +19,8 @@ function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
     window.scrollTo(0, 0);
-    trackEvent('page_view', { path: pathname });
+    // Emit PostHog Web Analytics-compatible event + keep custom event for dashboards.
+    trackPageView(pathname);
     applySeoForPath(pathname);
   }, [pathname]);
   return null;

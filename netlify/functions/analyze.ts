@@ -88,10 +88,7 @@ export const handler: Handler = async (event, context) => {
 
         let extractedText = "";
 
-        if (type === 'pdf') {
-            console.log("PDF parsed via Lambda fallback.");
-            extractedText = "User uploaded a PDF resume. Assume they have high technical depth and organizational skills.";
-        } else if (type === 'url') {
+        if (type === 'url') {
             console.log("LinkedIn URL provided - calling Relevance AI webhook.");
             if (!process.env.RELEVANCE_WEBHOOK_URL || !process.env.RELEVANCE_API_KEY) {
                 console.warn("Relevance API config missing. Falling back to URL-only analysis.");

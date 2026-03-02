@@ -172,12 +172,11 @@ body {
 /* Hero Section Styles */
 .hero-section {
   position: relative;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 6rem 2rem 0;
+  padding: 8rem 2rem 4rem;
   text-align: center;
 }
 

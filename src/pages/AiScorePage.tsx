@@ -801,7 +801,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                             />
 
                             {/* Grading Labels */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', width: '100%', marginTop: '1.5rem', gap: '1rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', width: '100%', marginTop: '1.5rem', gap: '1rem', alignItems: 'start' }}>
                                 <div>
                                     <span style={{ color: '#F25F22', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>&lt; 30 Score</span>
                                     <h4 style={{ margin: '0.4rem 0 0 0', fontSize: '1rem', color: 'var(--text-primary)' }}>Highly Replaceable</h4>

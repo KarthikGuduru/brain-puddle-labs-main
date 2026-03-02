@@ -150,9 +150,9 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         try {
             const canvas = await captureBothSides();
             if (!canvas) return;
-            const dataUrl = canvas.toDataURL('image/png');
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
             const link = document.createElement('a');
-            link.download = `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.png`;
+            link.download = `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`;
             link.href = dataUrl;
             link.click();
             trackEvent('ai_card_downloaded', { aiRunId: aiRunId || null });
@@ -175,15 +175,15 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             const canvas = await captureBothSides();
             let sharedViaNativeSheet = false;
             let shareFile: File | null = null;
-            const fileName = `AI-Resilience-Card-${analysisData.pokemon.name || 'Score'}.png`;
+            const fileName = `AI-Resilience-Card-${analysisData.pokemon.name || 'Score'}.jpg`;
             let cardDataUrl = '';
             let shareTarget = `${window.location.origin}/ai-score`;
 
             if (canvas) {
-                const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+                const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
                 if (blob) {
-                    shareFile = new File([blob], fileName, { type: 'image/png' });
-                    cardDataUrl = canvas.toDataURL('image/png');
+                    shareFile = new File([blob], fileName, { type: 'image/jpeg' });
+                    cardDataUrl = canvas.toDataURL('image/jpeg', 0.8);
                 }
             }
 

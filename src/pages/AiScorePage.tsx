@@ -176,16 +176,12 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
         try {
             const canvas = await captureBothSides();
-            let sharedViaNativeSheet = false;
-            let shareFile: File | null = null;
-            const fileName = `AI-Resilience-Card-${analysisData.pokemon.name || 'Score'}.jpg`;
             let cardDataUrl = '';
             let shareTarget = `${window.location.origin}/ai-score`;
 
             if (canvas) {
                 const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
                 if (blob) {
-                    shareFile = new File([blob], fileName, { type: 'image/jpeg' });
                     cardDataUrl = canvas.toDataURL('image/jpeg', 0.8);
                 }
             }
@@ -227,30 +223,10 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                 });
             }
 
-            if (
-                shareFile &&
-                navigator.share &&
-                (!navigator.canShare || navigator.canShare({ files: [shareFile] }))
-            ) {
-                try {
-                    await navigator.share({
-                        title: 'BrainPuddle AI Resilience Score',
-                        text: shareText,
-                        url: shareTarget,
-                        files: [shareFile]
-                    });
-                    sharedViaNativeSheet = true;
-                } catch (shareError) {
-                    // If native share fails/cancels, continue with LinkedIn web fallback.
-                    console.warn('Native share unavailable, falling back to LinkedIn composer.', shareError);
-                }
-            }
-
-            if (!sharedViaNativeSheet) {
-                const openedWindow = window.open(linkedInShareUrl, '_blank', 'noopener,noreferrer');
-                if (!openedWindow) {
-                    window.location.href = linkedInShareUrl;
-                }
+            // Directly open LinkedIn instead of native mobile share sheets
+            const openedWindow = window.open(linkedInShareUrl, '_blank', 'noopener,noreferrer');
+            if (!openedWindow) {
+                window.location.href = linkedInShareUrl;
             }
             trackEvent('ai_share_created', { aiRunId: aiRunId || null, shareUrl: shareTarget });
         } catch (error) {

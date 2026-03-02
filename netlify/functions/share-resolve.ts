@@ -4,7 +4,8 @@ import { resolveSiteOrigin } from './_lib/env';
 import { localStore } from './_lib/local-store';
 import { escapeHtml } from './_lib/utils';
 
-const fallbackImage = (origin: string) => `${origin}/consultation-hero.png`;
+const proxyShareImage = (origin: string, shareId: string) =>
+    `${origin}/api/share-image?id=${encodeURIComponent(shareId)}`;
 
 const buildHtml = ({
     origin,
@@ -123,7 +124,7 @@ export const handler: Handler = async (event) => {
                     title: entry.title,
                     score: entry.score,
                     tier: entry.tier,
-                    imageUrl: entry.imageUrl || fallbackImage(origin)
+                    imageUrl: proxyShareImage(origin, entry.id)
                 })
             };
         }
@@ -149,7 +150,7 @@ export const handler: Handler = async (event) => {
             title: String(row.title || 'Digital Professional'),
             score: Number(row.score || 50),
             tier: String(row.tier || '⚔️ AI-Resistant'),
-            imageUrl: String(row.public_image_url || fallbackImage(origin))
+            imageUrl: proxyShareImage(origin, String(row.id || shareId))
         });
 
         return {

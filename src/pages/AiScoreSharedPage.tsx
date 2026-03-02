@@ -58,6 +58,7 @@ const AiScoreSharedPage: React.FC<{ onContactOpen?: () => void }> = ({ onContact
     const [imageLoadError, setImageLoadError] = useState(false);
     const [remoteCard, setRemoteCard] = useState<SharedCardResponse | null>(null);
     const [loadingRemote, setLoadingRemote] = useState(false);
+    const [imageCandidateIndex, setImageCandidateIndex] = useState(0);
 
     useEffect(() => {
         let canceled = false;
@@ -95,13 +96,28 @@ const AiScoreSharedPage: React.FC<{ onContactOpen?: () => void }> = ({ onContact
     );
     const shareNote = getPayloadValue(decodedPayload, ['note']) || searchParams.get('note') || 'Shared from BrainPuddle AI Score';
     const cardImageUrl =
-        remoteCard?.imageUrl ||
         getPayloadValue(decodedPayload, ['i', 'image', 'imageUrl']) ||
         searchParams.get('i') ||
         searchParams.get('image') ||
         searchParams.get('imageUrl') ||
         '';
-    const hasCardImage = Boolean(cardImageUrl) && !imageLoadError;
+
+    const imageCandidates = useMemo(() => {
+        const list = [
+            remoteCard?.shareId ? `/api/share-image?id=${encodeURIComponent(remoteCard.shareId)}` : '',
+            remoteCard?.imageUrl || '',
+            cardImageUrl
+        ].filter(Boolean);
+        return Array.from(new Set(list));
+    }, [remoteCard?.shareId, remoteCard?.imageUrl, cardImageUrl]);
+
+    useEffect(() => {
+        setImageCandidateIndex(0);
+        setImageLoadError(false);
+    }, [imageCandidates.join('|')]);
+
+    const resolvedImageUrl = imageCandidates[imageCandidateIndex] || '';
+    const hasCardImage = Boolean(resolvedImageUrl) && !imageLoadError;
 
     const tierColor = tierColors[tier] || '#ffeb3b';
     const resilienceScore = Math.max(0, 100 - score);
@@ -144,9 +160,15 @@ const AiScoreSharedPage: React.FC<{ onContactOpen?: () => void }> = ({ onContact
                     {hasCardImage && (
                         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
                             <img
-                                src={cardImageUrl}
+                                src={resolvedImageUrl}
                                 alt={`${name} AI score card`}
-                                onError={() => setImageLoadError(true)}
+                                onError={() => {
+                                    if (imageCandidateIndex < imageCandidates.length - 1) {
+                                        setImageCandidateIndex((index) => index + 1);
+                                        return;
+                                    }
+                                    setImageLoadError(true);
+                                }}
                                 style={{
                                     width: '100%',
                                     maxWidth: '460px',

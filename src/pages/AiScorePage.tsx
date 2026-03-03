@@ -2,14 +2,22 @@ import React, { useEffect, useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import * as pdfjsLib from 'pdfjs-dist';
 import ScoreReport from '../components/ai-score/ScoreReport';
 import PokemonCard from '../components/ai-score/PokemonCard';
 import ClaimPhysicalCard from '../components/ai-score/ClaimPhysicalCard';
 import { trackEvent } from '../lib/analytics';
 import { featureFlags } from '../lib/features';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+const PDFJS_CDN_VERSION = '4.4.168';
+const PDFJS_CDN_BASE = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_CDN_VERSION}`;
+
+let _pdfjsLib: any = null;
+const loadPdfJs = async () => {
+    if (_pdfjsLib) return _pdfjsLib;
+    _pdfjsLib = await import(/* @vite-ignore */ `${PDFJS_CDN_BASE}/pdf.min.mjs`);
+    _pdfjsLib.GlobalWorkerOptions.workerSrc = `${PDFJS_CDN_BASE}/pdf.worker.min.mjs`;
+    return _pdfjsLib;
+};
 
 interface AnalysisResult {
     score: number;
@@ -399,14 +407,15 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                 type = 'text';
                 try {
                     console.log('Attempting client-side PDF parsing...');
+                    const pdfjsLib = await loadPdfJs();
                     const arrayBuffer = await resumeFile.arrayBuffer();
-                    const uint8Array = new Uint8Array(arrayBuffer); // Convert ArrayBuffer to Uint8Array
+                    const uint8Array = new Uint8Array(arrayBuffer);
                     const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
                     const pages: string[] = [];
                     for (let i = 1; i <= pdf.numPages; i++) {
                         const page = await pdf.getPage(i);
                         const content = await page.getTextContent();
-                        pages.push(content.items.map((item) => ('str' in item ? item.str : '')).join(' '));
+                        pages.push(content.items.map((item: any) => ('str' in item ? item.str : '')).join(' '));
                     }
                     data = pages.join('\n').trim();
                     if (!data) throw new Error('empty');

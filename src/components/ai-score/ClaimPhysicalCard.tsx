@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import Confetti from 'react-confetti';
-import { useWindowSize } from 'react-use';
 import TurnstileWidget from '../TurnstileWidget';
 import { trackEvent } from '../../lib/analytics';
 
@@ -35,7 +34,6 @@ const ClaimPhysicalCard: React.FC<ClaimPhysicalCardProps> = ({ aiRunId, defaultL
     const [turnstileToken, setTurnstileToken] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const { width, height } = useWindowSize();
 
     const isSoldOut = counter.remaining <= 0;
 
@@ -145,12 +143,7 @@ const ClaimPhysicalCard: React.FC<ClaimPhysicalCardProps> = ({ aiRunId, defaultL
 
     return (
         <>
-            {success && (
-                <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999 }}>
-                    <Confetti width={width} height={height} recycle={false} numberOfPieces={600} gravity={0.15} />
-                </div>
-            )}
-            <div className="glass claim-physical-card" style={{ width: '100%', maxWidth: '760px', borderRadius: '1.6rem', padding: '1.5rem' }}>
+            <div className="glass claim-physical-card" style={{ width: '100%', maxWidth: '760px', borderRadius: '1.6rem', padding: '1.5rem', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.9rem' }}>
                     <h3 style={{ margin: 0, fontSize: 'clamp(1.5rem, 2.4vw, 2.2rem)', lineHeight: 1.1 }}>
                         Claim Physical Card
@@ -217,24 +210,32 @@ const ClaimPhysicalCard: React.FC<ClaimPhysicalCardProps> = ({ aiRunId, defaultL
                         <p style={{ margin: 0, color: '#0f8b4b', fontSize: '0.9rem' }}>{success}</p>
                     )}
 
-                    <button
-                        type="submit"
-                        disabled={submitting || isSoldOut}
-                        style={{
-                            marginTop: '0.35rem',
-                            width: '100%',
-                            border: 'none',
-                            borderRadius: '999px',
-                            background: isSoldOut ? '#A6A6A6' : 'var(--accent-color)',
-                            color: '#fff',
-                            fontSize: '1.1rem',
-                            fontWeight: 600,
-                            padding: '1rem',
-                            cursor: submitting || isSoldOut ? 'not-allowed' : 'pointer'
-                        }}
-                    >
-                        {isSoldOut ? 'Sold Out' : submitting ? 'Submitting...' : 'Claim My Free Card'}
-                    </button>
+                    <div style={{ position: 'relative', marginTop: '0.35rem' }}>
+                        {success && (
+                            <div style={{ position: 'absolute', bottom: '50%', left: '50%', transform: 'translate(-50%, 50%)', width: '300px', height: '300px', pointerEvents: 'none', zIndex: 10 }}>
+                                <Confetti width={300} height={300} recycle={false} numberOfPieces={250} gravity={0.25} initialVelocityY={15} />
+                            </div>
+                        )}
+                        <button
+                            type="submit"
+                            disabled={submitting || isSoldOut}
+                            style={{
+                                width: '100%',
+                                border: 'none',
+                                borderRadius: '999px',
+                                background: isSoldOut ? '#A6A6A6' : 'var(--accent-color)',
+                                color: '#fff',
+                                fontSize: '1.1rem',
+                                fontWeight: 600,
+                                padding: '1rem',
+                                cursor: submitting || isSoldOut ? 'not-allowed' : 'pointer',
+                                position: 'relative',
+                                zIndex: 2
+                            }}
+                        >
+                            {isSoldOut ? 'Sold Out' : submitting ? 'Submitting...' : 'Claim My Free Card'}
+                        </button>
+                    </div>
                 </form>
             </div>
         </>

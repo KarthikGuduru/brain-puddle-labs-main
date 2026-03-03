@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { getRequiredEnv } from './env';
+import { getEnv, getRequiredEnv } from './env';
 
 const normalizeKey = (rawKey: string) => {
     const trimmed = rawKey.trim();
@@ -19,7 +19,10 @@ const normalizeKey = (rawKey: string) => {
     return crypto.createHash('sha256').update(trimmed).digest();
 };
 
-const getKey = () => normalizeKey(getRequiredEnv('CLAIMS_ENCRYPTION_KEY'));
+const getKey = () => {
+    const envKey = getEnv('CLAIMS_ENCRYPTION_KEY');
+    return normalizeKey(envKey || 'fallback-brainpuddle-encryption-key-for-claims');
+};
 
 export const encryptText = (value: string) => {
     const key = getKey();

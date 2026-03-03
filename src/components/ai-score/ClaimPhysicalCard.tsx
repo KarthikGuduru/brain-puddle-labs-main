@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import Confetti from 'react-confetti';
+import { useWindowSize } from 'react-use';
 import TurnstileWidget from '../TurnstileWidget';
 import { trackEvent } from '../../lib/analytics';
 
@@ -33,6 +35,7 @@ const ClaimPhysicalCard: React.FC<ClaimPhysicalCardProps> = ({ aiRunId, defaultL
     const [turnstileToken, setTurnstileToken] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const { width, height } = useWindowSize();
 
     const isSoldOut = counter.remaining <= 0;
 
@@ -141,93 +144,100 @@ const ClaimPhysicalCard: React.FC<ClaimPhysicalCardProps> = ({ aiRunId, defaultL
     };
 
     return (
-        <div className="glass claim-physical-card" style={{ width: '100%', maxWidth: '760px', borderRadius: '1.6rem', padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.9rem' }}>
-                <h3 style={{ margin: 0, fontSize: 'clamp(1.5rem, 2.4vw, 2.2rem)', lineHeight: 1.1 }}>
-                    Claim Physical Card
-                </h3>
-                <span style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: '999px',
-                    padding: '0.45rem 0.95rem',
-                    fontWeight: 700,
-                    fontSize: '0.9rem',
-                    color: '#fff',
-                    background: isSoldOut ? '#A6A6A6' : 'var(--accent-color)'
-                }}>
-                    {badgeText}
-                </span>
-            </div>
-
-            <p style={{ marginTop: 0, color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.5 }}>
-                First 100 users get a premium holographic physical print of their card delivered for free.
-            </p>
-
-            <form onSubmit={handleSubmit} style={{ marginTop: '1rem', display: 'grid', gap: '0.95rem' }}>
-                <input
-                    value={fullName}
-                    onChange={(event) => setFullName(event.target.value)}
-                    placeholder="Full Name"
-                    required
-                    disabled={submitting || isSoldOut}
-                    style={{ width: '100%', padding: '1rem 1.1rem', borderRadius: '0.9rem', border: 'var(--glass-border)', background: 'var(--bg-dark)', color: 'var(--text-primary)', fontSize: '1.02rem' }}
-                />
-
-                <input
-                    value={linkedinUrl}
-                    onChange={(event) => setLinkedinUrl(event.target.value)}
-                    placeholder="LinkedIn Profile URL"
-                    type="url"
-                    required
-                    disabled={submitting || isSoldOut}
-                    style={{ width: '100%', padding: '1rem 1.1rem', borderRadius: '0.9rem', border: 'var(--glass-border)', background: 'var(--bg-dark)', color: 'var(--text-primary)', fontSize: '1.02rem' }}
-                />
-
-                <textarea
-                    value={deliveryAddress}
-                    onChange={(event) => setDeliveryAddress(event.target.value)}
-                    placeholder="Delivery Address"
-                    required
-                    rows={3}
-                    disabled={submitting || isSoldOut}
-                    style={{ width: '100%', padding: '1rem 1.1rem', borderRadius: '0.9rem', border: 'var(--glass-border)', background: 'var(--bg-dark)', color: 'var(--text-primary)', fontSize: '1.02rem', resize: 'vertical' }}
-                />
-
-                {turnstileSiteKey && (
-                    <div>
-                        <TurnstileWidget siteKey={turnstileSiteKey} onTokenChange={setTurnstileToken} />
-                    </div>
-                )}
-
-                {error && (
-                    <p style={{ margin: 0, color: '#d14343', fontSize: '0.9rem' }}>{error}</p>
-                )}
-                {success && (
-                    <p style={{ margin: 0, color: '#0f8b4b', fontSize: '0.9rem' }}>{success}</p>
-                )}
-
-                <button
-                    type="submit"
-                    disabled={submitting || isSoldOut}
-                    style={{
-                        marginTop: '0.35rem',
-                        width: '100%',
-                        border: 'none',
+        <>
+            {success && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999 }}>
+                    <Confetti width={width} height={height} recycle={false} numberOfPieces={600} gravity={0.15} />
+                </div>
+            )}
+            <div className="glass claim-physical-card" style={{ width: '100%', maxWidth: '760px', borderRadius: '1.6rem', padding: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.9rem' }}>
+                    <h3 style={{ margin: 0, fontSize: 'clamp(1.5rem, 2.4vw, 2.2rem)', lineHeight: 1.1 }}>
+                        Claim Physical Card
+                    </h3>
+                    <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         borderRadius: '999px',
-                        background: isSoldOut ? '#A6A6A6' : 'var(--accent-color)',
+                        padding: '0.45rem 0.95rem',
+                        fontWeight: 700,
+                        fontSize: '0.9rem',
                         color: '#fff',
-                        fontSize: '1.1rem',
-                        fontWeight: 600,
-                        padding: '1rem',
-                        cursor: submitting || isSoldOut ? 'not-allowed' : 'pointer'
-                    }}
-                >
-                    {isSoldOut ? 'Sold Out' : submitting ? 'Submitting...' : 'Claim My Free Card'}
-                </button>
-            </form>
-        </div>
+                        background: isSoldOut ? '#A6A6A6' : 'var(--accent-color)'
+                    }}>
+                        {badgeText}
+                    </span>
+                </div>
+
+                <p style={{ marginTop: 0, color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.5 }}>
+                    First 100 users get a premium holographic physical print of their card delivered for free.
+                </p>
+
+                <form onSubmit={handleSubmit} style={{ marginTop: '1rem', display: 'grid', gap: '0.95rem' }}>
+                    <input
+                        value={fullName}
+                        onChange={(event) => setFullName(event.target.value)}
+                        placeholder="Full Name"
+                        required
+                        disabled={submitting || isSoldOut}
+                        style={{ width: '100%', padding: '1rem 1.1rem', borderRadius: '0.9rem', border: 'var(--glass-border)', background: 'var(--bg-dark)', color: 'var(--text-primary)', fontSize: '1.02rem' }}
+                    />
+
+                    <input
+                        value={linkedinUrl}
+                        onChange={(event) => setLinkedinUrl(event.target.value)}
+                        placeholder="LinkedIn Profile URL"
+                        type="url"
+                        required
+                        disabled={submitting || isSoldOut}
+                        style={{ width: '100%', padding: '1rem 1.1rem', borderRadius: '0.9rem', border: 'var(--glass-border)', background: 'var(--bg-dark)', color: 'var(--text-primary)', fontSize: '1.02rem' }}
+                    />
+
+                    <textarea
+                        value={deliveryAddress}
+                        onChange={(event) => setDeliveryAddress(event.target.value)}
+                        placeholder="Delivery Address"
+                        required
+                        rows={3}
+                        disabled={submitting || isSoldOut}
+                        style={{ width: '100%', padding: '1rem 1.1rem', borderRadius: '0.9rem', border: 'var(--glass-border)', background: 'var(--bg-dark)', color: 'var(--text-primary)', fontSize: '1.02rem', resize: 'vertical' }}
+                    />
+
+                    {turnstileSiteKey && (
+                        <div>
+                            <TurnstileWidget siteKey={turnstileSiteKey} onTokenChange={setTurnstileToken} />
+                        </div>
+                    )}
+
+                    {error && (
+                        <p style={{ margin: 0, color: '#d14343', fontSize: '0.9rem' }}>{error}</p>
+                    )}
+                    {success && (
+                        <p style={{ margin: 0, color: '#0f8b4b', fontSize: '0.9rem' }}>{success}</p>
+                    )}
+
+                    <button
+                        type="submit"
+                        disabled={submitting || isSoldOut}
+                        style={{
+                            marginTop: '0.35rem',
+                            width: '100%',
+                            border: 'none',
+                            borderRadius: '999px',
+                            background: isSoldOut ? '#A6A6A6' : 'var(--accent-color)',
+                            color: '#fff',
+                            fontSize: '1.1rem',
+                            fontWeight: 600,
+                            padding: '1rem',
+                            cursor: submitting || isSoldOut ? 'not-allowed' : 'pointer'
+                        }}
+                    >
+                        {isSoldOut ? 'Sold Out' : submitting ? 'Submitting...' : 'Claim My Free Card'}
+                    </button>
+                </form>
+            </div>
+        </>
     );
 };
 

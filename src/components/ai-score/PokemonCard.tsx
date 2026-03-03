@@ -228,6 +228,10 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
                         <div className="stat-retreat">Upgrade Cost<br /><span>⬆️ 2 XP</span></div>
                     </div>
 
+                    <div style={{ textAlign: 'center', fontSize: '0.45rem', opacity: 0.4, fontWeight: 700, marginTop: 'auto', paddingTop: '2px' }}>
+                        brainpuddle.com © 2026
+                    </div>
+
                 </div>
 
                 {/* Back */}

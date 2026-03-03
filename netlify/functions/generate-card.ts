@@ -71,12 +71,6 @@ const buildStylisedInitialsImage = (name: string) => {
 
   <!-- Shine overlay on initials -->
   <text x="400" y="265" text-anchor="middle" dominant-baseline="central" font-size="200" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="900" fill="rgba(255,255,255,0.15)" letter-spacing="10">${initials}</text>
-
-  <!-- Subtitle -->
-  <text x="400" y="440" text-anchor="middle" font-size="22" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="500" fill="${p.text}" opacity="0.7" letter-spacing="6">BRAINPUDDLE</text>
-
-  <!-- Decorative line -->
-  <line x1="300" y1="470" x2="500" y2="470" stroke="${p.text}" stroke-opacity="0.2" stroke-width="2"/>
 </svg>`;
     return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 };

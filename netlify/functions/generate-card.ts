@@ -31,7 +31,7 @@ const buildStylisedInitialsImage = (name: string) => {
     const p = palettes[hash % palettes.length];
 
     const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1024" viewBox="0 0 768 1024">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="${p.bg1}"/>
@@ -42,41 +42,41 @@ const buildStylisedInitialsImage = (name: string) => {
       <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
     </linearGradient>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="${p.shadow}" flood-opacity="0.8"/>
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="${p.shadow}" flood-opacity="0.8"/>
     </filter>
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="30" result="blur"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="25" result="blur"/>
       <feComposite in="SourceGraphic" in2="blur" operator="over"/>
     </filter>
   </defs>
 
   <!-- Background -->
-  <rect width="768" height="1024" fill="url(#bg)"/>
+  <rect width="800" height="600" fill="url(#bg)"/>
 
   <!-- Decorative circles -->
-  <circle cx="120" cy="180" r="120" fill="rgba(255,255,255,0.08)"/>
-  <circle cx="650" cy="850" r="160" fill="rgba(255,255,255,0.06)"/>
-  <circle cx="600" cy="200" r="80" fill="rgba(255,255,255,0.05)"/>
-  <circle cx="180" cy="800" r="100" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="100" cy="80" r="90" fill="rgba(255,255,255,0.08)"/>
+  <circle cx="700" cy="520" r="110" fill="rgba(255,255,255,0.06)"/>
+  <circle cx="680" cy="100" r="60" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="120" cy="480" r="70" fill="rgba(255,255,255,0.04)"/>
 
   <!-- Glass card -->
-  <rect x="84" y="212" width="600" height="600" rx="48" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-  <rect x="84" y="212" width="600" height="300" rx="48" fill="url(#shine)"/>
+  <rect x="150" y="60" width="500" height="480" rx="40" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+  <rect x="150" y="60" width="500" height="240" rx="40" fill="url(#shine)"/>
 
   <!-- Glow behind initials -->
-  <text x="384" y="545" text-anchor="middle" dominant-baseline="central" font-size="240" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="900" fill="${p.accent}" opacity="0.3" filter="url(#glow)">${initials}</text>
+  <text x="400" y="280" text-anchor="middle" dominant-baseline="central" font-size="200" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="900" fill="${p.accent}" opacity="0.3" filter="url(#glow)">${initials}</text>
 
   <!-- Main initials with shadow -->
-  <text x="384" y="545" text-anchor="middle" dominant-baseline="central" font-size="240" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="900" fill="${p.text}" letter-spacing="12" filter="url(#shadow)">${initials}</text>
+  <text x="400" y="280" text-anchor="middle" dominant-baseline="central" font-size="200" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="900" fill="${p.text}" letter-spacing="10" filter="url(#shadow)">${initials}</text>
 
   <!-- Shine overlay on initials -->
-  <text x="384" y="525" text-anchor="middle" dominant-baseline="central" font-size="240" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="900" fill="rgba(255,255,255,0.15)" letter-spacing="12">${initials}</text>
+  <text x="400" y="265" text-anchor="middle" dominant-baseline="central" font-size="200" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="900" fill="rgba(255,255,255,0.15)" letter-spacing="10">${initials}</text>
 
   <!-- Subtitle -->
-  <text x="384" y="680" text-anchor="middle" font-size="28" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="500" fill="${p.text}" opacity="0.7" letter-spacing="6">BRAINPUDDLE</text>
+  <text x="400" y="440" text-anchor="middle" font-size="22" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="500" fill="${p.text}" opacity="0.7" letter-spacing="6">BRAINPUDDLE</text>
 
   <!-- Decorative line -->
-  <line x1="284" y1="720" x2="484" y2="720" stroke="${p.text}" stroke-opacity="0.2" stroke-width="2"/>
+  <line x1="300" y1="470" x2="500" y2="470" stroke="${p.text}" stroke-opacity="0.2" stroke-width="2"/>
 </svg>`;
     return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 };

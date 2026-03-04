@@ -60,6 +60,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const [aiRunId, setAiRunId] = useState<string | null>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [isSharing, setIsSharing] = useState(false);
+    const [downloadBlob, setDownloadBlob] = useState<Blob | null>(null);
     const transitionTimeoutsRef = useRef<number[]>([]);
     const scanRequestIdRef = useRef(0);
 
@@ -79,6 +80,30 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             clearTransitionTimers();
         };
     }, []);
+
+    // Pre-generate the download blob in the background when results are ready.
+    // This allows handleDownload to be fully synchronous, which is strictly
+    // required by iOS Safari to allow navigator.share() to work on click.
+    useEffect(() => {
+        if (step === 'results' && analysisData && cardRef.current) {
+            const generateBlob = async () => {
+                try {
+                    // Give Framer Motion and fonts a tiny moment to settle before capturing
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const canvas = await captureBothSides();
+                    if (!canvas) return;
+
+                    const blob = await new Promise<Blob | null>((resolve) =>
+                        canvas.toBlob(resolve, 'image/jpeg', 0.9)
+                    );
+                    if (blob) setDownloadBlob(blob);
+                } catch (err) {
+                    console.error('Failed background card capture', err);
+                }
+            };
+            generateBlob();
+        }
+    }, [step, analysisData]);
 
     /**
      * html2canvas ignores CSS object-fit, so SVG data-URL images render
@@ -223,12 +248,14 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         if (!analysisData) return;
 
         try {
-            const canvas = await captureBothSides();
-            if (!canvas) return;
-
-            const blob = await new Promise<Blob | null>((resolve) =>
-                canvas.toBlob(resolve, 'image/jpeg', 0.9)
-            );
+            // Use the pre-generated blob if ready (makes the click instant for iOS),
+            // otherwise generate on the fly and hope the browser allows it.
+            let blob = downloadBlob;
+            if (!blob) {
+                const canvas = await captureBothSides();
+                if (!canvas) return;
+                blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+            }
             if (!blob) return;
 
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);

@@ -231,16 +231,65 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
     const handleDownload = async () => {
         if (!analysisData) return;
+
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+        // iOS Safari: open blank window SYNCHRONOUSLY to preserve user gesture
+        // (window.open after any await is blocked by iOS)
+        let iosWindow: Window | null = null;
+        if (isIOS) {
+            iosWindow = window.open('about:blank', '_blank');
+        }
+
         try {
             const canvas = await captureBothSides();
-            if (!canvas) return;
+            if (!canvas) {
+                if (iosWindow && !iosWindow.closed) iosWindow.close();
+                return;
+            }
 
-            // Convert to blob for better iOS Safari compatibility
             const blob = await new Promise<Blob | null>((resolve) =>
                 canvas.toBlob(resolve, 'image/jpeg', 0.9)
             );
+            if (!blob) {
+                if (iosWindow && !iosWindow.closed) iosWindow.close();
+                return;
+            }
 
-            if (blob) {
+            if (isIOS) {
+                // Primary: try Web Share API (gives native "Save Image" option)
+                const file = new File([blob], `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`, { type: 'image/jpeg' });
+                if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                    // Close the pre-opened window since share sheet will handle it
+                    if (iosWindow && !iosWindow.closed) iosWindow.close();
+                    await navigator.share({ files: [file] });
+                } else {
+                    // Fallback: show image in the pre-opened window for long-press save
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                    if (iosWindow && !iosWindow.closed) {
+                        iosWindow.document.write(`
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta name="viewport" content="width=device-width, initial-scale=1">
+                                <title>Save Your Card</title>
+                                <style>
+                                    body { margin: 0; padding: 20px; background: #f5f5f5; font-family: -apple-system, sans-serif; text-align: center; }
+                                    img { max-width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+                                    p { color: #666; margin: 16px 0; font-size: 15px; }
+                                </style>
+                            </head>
+                            <body>
+                                <p>📱 <strong>Long-press the image below</strong> and tap <em>"Save to Photos"</em></p>
+                                <img src="${dataUrl}" alt="AI Resilience Card" />
+                            </body>
+                            </html>
+                        `);
+                        iosWindow.document.close();
+                    }
+                }
+            } else {
+                // Non-iOS: standard download via link.download
                 const blobUrl = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.download = `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`;
@@ -248,24 +297,13 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-
-                // iOS Safari fallback: if link.download doesn't trigger a save,
-                // open the blob in a new tab so the user can long-press to save
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                if (isIOS) {
-                    // Give the link.click() a moment, then open in new tab as fallback
-                    setTimeout(() => {
-                        window.open(blobUrl, '_blank');
-                    }, 300);
-                } else {
-                    // Clean up blob URL after a delay (non-iOS)
-                    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-                }
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
             }
 
             trackEvent('ai_card_downloaded', { aiRunId: aiRunId || null });
         } catch (error) {
             console.error('Failed to download image', error);
+            if (iosWindow && !iosWindow.closed) iosWindow.close();
             trackEvent('ai_card_download_failed', {
                 aiRunId: aiRunId || null,
                 reason: (error as Error)?.message || 'unknown'

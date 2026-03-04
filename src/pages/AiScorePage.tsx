@@ -70,8 +70,6 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const transitionTimeoutsRef = useRef<number[]>([]);
     const scanRequestIdRef = useRef(0);
 
-    const [shareUrl, setShareUrl] = useState<string | null>(null);
-
     const clearTransitionTimers = () => {
         transitionTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
         transitionTimeoutsRef.current = [];
@@ -89,12 +87,11 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         };
     }, []);
 
-    // Pre-generate the download blob and persistent share URL in the background
-    // when results are ready. This makes 'Download' and 'Share' buttons 
-    // strictly synchronous, frictionless, and universally supported across mobiles.
+    // Pre-generate the download blob in the background when results are ready.
+    // This allows action handlers to be fully synchronous and resilient on mobile.
     useEffect(() => {
         if (step === 'results' && analysisData && cardRef.current) {
-            const generateBackgroundAssets = async () => {
+            const generateBlob = async () => {
                 setIsGeneratingBlob(true);
                 try {
                     // Give Framer Motion and fonts a tiny moment to settle before capturing
@@ -108,51 +105,16 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                     const blob = await new Promise<Blob | null>((resolve) =>
                         canvas.toBlob(resolve, 'image/jpeg', 0.9)
                     );
-                    if (blob) {
-                        setDownloadBlob(blob);
-
-                        // If persistent sharing is enabled, silently create the share URL now
-                        if (featureFlags.persistentShare && aiRunId) {
-                            try {
-                                const cardDataUrl = await new Promise<string>((resolve) => {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => resolve(reader.result as string);
-                                    reader.readAsDataURL(blob);
-                                });
-
-                                const shareCreateResponse = await fetch('/api/share-card/create', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        aiRunId,
-                                        name: analysisData.pokemon.name || 'Professional User',
-                                        title: analysisData.pokemon.title || 'Digital Professional',
-                                        score: Number(analysisData.score ?? 50),
-                                        tier: analysisData.tier || '⚔️ AI-Resistant',
-                                        cardImageBase64: cardDataUrl
-                                    })
-                                });
-
-                                if (shareCreateResponse.ok) {
-                                    const payload = await shareCreateResponse.json() as { shareUrl?: string };
-                                    if (payload.shareUrl) {
-                                        setShareUrl(payload.shareUrl);
-                                    }
-                                }
-                            } catch (err) {
-                                console.error("Failed to pre-generate share URL", err);
-                            }
-                        }
-                    }
+                    if (blob) setDownloadBlob(blob);
                 } catch (err) {
                     console.error('Failed background card capture', err);
                 } finally {
                     setIsGeneratingBlob(false);
                 }
             };
-            generateBackgroundAssets();
+            generateBlob();
         }
-    }, [step, analysisData, aiRunId]);
+    }, [step, analysisData]);
 
     /**
      * html2canvas ignores CSS object-fit, so SVG data-URL images render
@@ -337,14 +299,24 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     };
 
     const handleDownload = async () => {
-        if (!analysisData || !downloadBlob) return;
+        if (!analysisData) return;
 
         try {
             const isMobile = isMobileDevice();
 
+            // Use the pre-generated blob if ready (makes the click instant for mobile),
+            // otherwise generate on the fly with the appropriate platform strategy
+            let blob = downloadBlob;
+            if (!blob) {
+                const canvas = await captureBothSides(isMobile);
+                if (!canvas) return;
+                blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+            }
+            if (!blob) return;
+
             // Mobile Primary: Web Share API (native "Save Image" option without blank window flash)
             if (isMobile && navigator.share) {
-                const file = new File([downloadBlob], `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`, { type: 'image/jpeg' });
+                const file = new File([blob], `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`, { type: 'image/jpeg' });
                 if (navigator.canShare?.({ files: [file] })) {
                     try {
                         await navigator.share({ files: [file] });
@@ -359,7 +331,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             }
 
             // Standard fallback for Desktop/Mac/iPad, or Mobile where Web Share is heavily restricted
-            const blobUrl = URL.createObjectURL(downloadBlob);
+            const blobUrl = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.download = `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`;
             link.href = blobUrl;
@@ -384,36 +356,115 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         setIsSharing(true);
         trackEvent('ai_share_clicked', { aiRunId: aiRunId || null });
 
-        // Build the target URL (uses the pre-generated shareUrl if available, falling back to base URL)
-        const shareTarget = shareUrl || `${window.location.origin}/ai-score`;
+        // --- DESKTOP / ANDROID FLOW BELOW ---
+        // (This uses window.open and creates a persistent custom share URL image)
 
-        const shareLines = [
-            `I just checked my AI Resilience Score on BrainPuddle.`,
-            `AI Resilience Score: ${100 - Number(analysisData.score)}/100`,
-            `Tier: ${analysisData.tier}`,
-            `Check yours: ${shareTarget}`
-        ];
-        const shareText = shareLines.join('\n');
-        const linkedInShareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(shareText)}`;
+        // iOS Safari blocks window.open after async calls, so open the window FIRST
+        const shareWindow = window.open('', '_blank');
 
-        // Optional: pre-copy to clipboard just in case they want to paste it elsewhere
-        if (navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText(shareText).catch(() => {
-                // Clipboard is optional; sharing should continue even if it fails.
-            });
+        // Improve UX: show a loading state instead of a stark blank page
+        if (shareWindow) {
+            shareWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>Preparing Share...</title>
+                    <style>
+                        body { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #f9fafb; font-family: -apple-system, sans-serif; }
+                        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+                        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                        h2 { color: #1e293b; margin: 0 0 8px 0; }
+                        p { color: #64748b; margin: 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="loader"></div>
+                    <h2>Generating your card...</h2>
+                    <p>Redirecting to LinkedIn in a moment</p>
+                </body>
+                </html>
+            `);
         }
 
-        // Navigate directly to LinkedIn (this is instant and completely synchronously safe)
-        const shareWindow = window.open(linkedInShareUrl, '_blank');
-        if (!shareWindow) {
-            // Fallback if popup blocker stops it on strict mobile browsers
-            window.location.href = linkedInShareUrl;
-        }
+        // Let React render the loading UI
+        await new Promise(resolve => setTimeout(resolve, 50));
 
-        setTimeout(() => setIsSharing(false), 1000);
+        try {
+            const isMobile = isMobileDevice();
+            let blob = downloadBlob;
+            let cardDataUrl = '';
+
+            if (!blob) {
+                const canvas = await captureBothSides(isMobile);
+                if (canvas) blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+            }
+
+            let shareTarget = `${window.location.origin}/ai-score`;
+
+            if (blob) {
+                cardDataUrl = await new Promise<string>((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.readAsDataURL(blob!);
+                });
+            }
+
+            if (featureFlags.persistentShare && cardDataUrl) {
+                const shareCreateResponse = await fetch('/api/share-card/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        aiRunId,
+                        name: analysisData.pokemon.name || 'Professional User',
+                        title: analysisData.pokemon.title || 'Digital Professional',
+                        score: Number(analysisData.score ?? 50),
+                        tier: analysisData.tier || '⚔️ AI-Resistant',
+                        cardImageBase64: cardDataUrl
+                    })
+                });
+                if (!shareCreateResponse.ok) {
+                    throw new Error('Failed to persist share card');
+                }
+                const payload = await shareCreateResponse.json() as { shareUrl?: string };
+                if (payload.shareUrl) {
+                    shareTarget = payload.shareUrl;
+                }
+            }
+
+            const shareLines = [
+                `I just checked my AI Resilience Score on BrainPuddle.`,
+                `AI Resilience Score: ${100 - Number(analysisData.score)}/100`,
+                `Tier: ${analysisData.tier}`,
+                `Check yours: ${shareTarget}`
+            ];
+            const shareText = shareLines.join('\n');
+            const linkedInShareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(shareText)}`;
+
+            if (navigator.clipboard?.writeText) {
+                navigator.clipboard.writeText(shareText).catch(() => {
+                    // Clipboard is optional; sharing should continue even if it fails.
+                });
+            }
+
+            // Navigate the pre-opened window to LinkedIn
+            if (shareWindow && !shareWindow.closed) {
+                shareWindow.location.href = linkedInShareUrl;
+            } else {
+                // Fallback: navigate current page if popup was blocked
+                window.location.href = linkedInShareUrl;
+            }
+            trackEvent('ai_share_created', { aiRunId: aiRunId || null, shareUrl: shareTarget });
+        } catch (error) {
+            console.error('Share failed', error);
+            // Close the blank window on error
+            if (shareWindow && !shareWindow.closed) shareWindow.close();
+            trackEvent('ai_share_failed', { aiRunId: aiRunId || null, error: (error as Error)?.message || 'unknown' });
+            alert('Unable to open LinkedIn share. Please try again.');
+        } finally {
+            queueTransition(() => setIsSharing(false), 700);
+        }
     };
-
-
 
     const smoothScrollTo = (targetY: number, duration: number = 800) => {
         const startY = window.scrollY;

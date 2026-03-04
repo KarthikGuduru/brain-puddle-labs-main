@@ -234,13 +234,35 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         try {
             const canvas = await captureBothSides();
             if (!canvas) return;
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-            const link = document.createElement('a');
-            link.download = `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`;
-            link.href = dataUrl;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+
+            // Convert to blob for better iOS Safari compatibility
+            const blob = await new Promise<Blob | null>((resolve) =>
+                canvas.toBlob(resolve, 'image/jpeg', 0.9)
+            );
+
+            if (blob) {
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`;
+                link.href = blobUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // iOS Safari fallback: if link.download doesn't trigger a save,
+                // open the blob in a new tab so the user can long-press to save
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                if (isIOS) {
+                    // Give the link.click() a moment, then open in new tab as fallback
+                    setTimeout(() => {
+                        window.open(blobUrl, '_blank');
+                    }, 300);
+                } else {
+                    // Clean up blob URL after a delay (non-iOS)
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+                }
+            }
+
             trackEvent('ai_card_downloaded', { aiRunId: aiRunId || null });
         } catch (error) {
             console.error('Failed to download image', error);
@@ -257,7 +279,11 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         setIsSharing(true);
         trackEvent('ai_share_clicked', { aiRunId: aiRunId || null });
 
-        // Let React render the loading UI before starting the massive synchronous thread execution
+        // iOS Safari blocks window.open after async calls, so open the window
+        // FIRST synchronously (preserving the user gesture), then navigate it.
+        const shareWindow = window.open('about:blank', '_blank');
+
+        // Let React render the loading UI
         await new Promise(resolve => setTimeout(resolve, 50));
 
         try {
@@ -309,14 +335,18 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                 });
             }
 
-            // Directly open LinkedIn instead of native mobile share sheets
-            const openedWindow = window.open(linkedInShareUrl, '_blank', 'noopener,noreferrer');
-            if (!openedWindow) {
+            // Navigate the pre-opened window to LinkedIn
+            if (shareWindow && !shareWindow.closed) {
+                shareWindow.location.href = linkedInShareUrl;
+            } else {
+                // Fallback: navigate current page if popup was blocked
                 window.location.href = linkedInShareUrl;
             }
             trackEvent('ai_share_created', { aiRunId: aiRunId || null, shareUrl: shareTarget });
         } catch (error) {
             console.error('Share failed', error);
+            // Close the blank window on error
+            if (shareWindow && !shareWindow.closed) shareWindow.close();
             trackEvent('ai_share_failed', { aiRunId: aiRunId || null, error: (error as Error)?.message || 'unknown' });
             alert('Unable to open LinkedIn share. Please try again.');
         } finally {

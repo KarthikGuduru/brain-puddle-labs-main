@@ -86,13 +86,14 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     // This allows handleDownload to be fully synchronous, which is strictly
     // required by iOS Safari to allow navigator.share() to work on click.
     useEffect(() => {
-        if (step === 'results' && analysisData && cardRef.current) {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (isIOS && step === 'results' && analysisData && cardRef.current) {
             const generateBlob = async () => {
                 setIsGeneratingBlob(true);
                 try {
                     // Give Framer Motion and fonts a tiny moment to settle before capturing
                     await new Promise(resolve => setTimeout(resolve, 50));
-                    const canvas = await captureBothSides();
+                    const canvas = await captureBothSides(true); // Always offscreen for iOS
                     if (!canvas) return;
 
                     const blob = await new Promise<Blob | null>((resolve) =>
@@ -178,38 +179,68 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         return () => restorers.forEach(fn => fn());
     };
 
-    const captureBothSides = async () => {
+    const captureBothSides = async (useOffscreenClone = false) => {
         if (!cardRef.current) return null;
 
-        // Create an off-screen container to capture the card without mutating the visible DOM
-        const offscreen = document.createElement('div');
-        offscreen.style.position = 'fixed';
-        offscreen.style.top = '-9999px';
-        offscreen.style.left = '-9999px';
-        offscreen.style.pointerEvents = 'none';
-        document.body.appendChild(offscreen);
+        const cardContainer = cardRef.current;
+        let captureRoot = cardContainer;
+        let offscreen: HTMLDivElement | null = null;
 
-        const clone = cardRef.current.cloneNode(true) as HTMLElement;
-        offscreen.appendChild(clone);
+        if (useOffscreenClone) {
+            // Create an off-screen container to capture the card without mutating the visible DOM
+            offscreen = document.createElement('div');
+            offscreen.style.position = 'fixed';
+            offscreen.style.top = '-9999px';
+            offscreen.style.left = '-9999px';
+            offscreen.style.pointerEvents = 'none';
+            document.body.appendChild(offscreen);
+
+            captureRoot = cardContainer.cloneNode(true) as HTMLDivElement;
+            offscreen.appendChild(captureRoot);
+        }
+
+        const frontEl = captureRoot.querySelector('.pokemon-card-front') as HTMLElement;
+        const backEl = captureRoot.querySelector('.pokemon-card-back') as HTMLElement;
+        if (!frontEl || !backEl) {
+            if (offscreen) document.body.removeChild(offscreen);
+            return null;
+        }
+
+        const opts = { backgroundColor: null, useCORS: true, scale: 2 };
+
+        let oldPointerEvents = '';
+        let oldFrontTransform = '';
+        let oldBackTransform = '';
+        let oldInnerTransform = '';
+        let oldBackDisplay = backEl.style.display;
+        let oldFrontDisplay = frontEl.style.display;
+        const hadFrontFocus = captureRoot.classList.contains('front-focused');
+
+        if (!useOffscreenClone) {
+            oldPointerEvents = cardContainer.style.pointerEvents;
+            cardContainer.style.pointerEvents = 'none';
+            oldFrontTransform = frontEl.style.transform;
+            oldBackTransform = backEl.style.transform;
+        }
+
+        const innerEl = captureRoot.querySelector('.pokemon-card-inner') as HTMLElement;
+        if (!useOffscreenClone && innerEl) {
+            oldInnerTransform = innerEl.style.transform;
+        }
+
+        // Flatten transforms for a clean 2D capture
+        if (innerEl) innerEl.style.transform = 'none';
+        frontEl.style.transform = 'none';
+        backEl.style.transform = 'none';
+
+        if (hadFrontFocus) {
+            captureRoot.classList.remove('front-focused');
+        }
+
+        // Pre-rasterise SVGs so they render properly
+        const restoreSvg = await preRasterizeSvgImages(captureRoot);
 
         try {
-            const frontEl = clone.querySelector('.pokemon-card-front') as HTMLElement;
-            const backEl = clone.querySelector('.pokemon-card-back') as HTMLElement;
-            if (!frontEl || !backEl) return null;
-
-            const opts = { backgroundColor: null, useCORS: true, scale: 2 };
-
-            // Flatten transforms for a clean 2D capture on the clone
-            const innerEl = clone.querySelector('.pokemon-card-inner') as HTMLElement;
-            if (innerEl) innerEl.style.transform = 'none';
-            frontEl.style.transform = 'none';
-            backEl.style.transform = 'none';
-
-            clone.classList.remove('front-focused');
-
-            // Pre-rasterise SVGs on the clone so they render properly
-            await preRasterizeSvgImages(clone);
-
             // ONLY explicitly show FRONT, completely hide BACK to avoid iOS Safari bleed
             backEl.style.display = 'none';
             frontEl.style.display = 'block';
@@ -244,7 +275,20 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
             return canvas;
         } finally {
-            document.body.removeChild(offscreen);
+            if (useOffscreenClone) {
+                if (offscreen) document.body.removeChild(offscreen);
+            } else {
+                restoreSvg();
+                backEl.style.display = oldBackDisplay;
+                frontEl.style.display = oldFrontDisplay;
+                if (innerEl) innerEl.style.transform = oldInnerTransform;
+                frontEl.style.transform = oldFrontTransform;
+                backEl.style.transform = oldBackTransform;
+                if (hadFrontFocus) {
+                    captureRoot.classList.add('front-focused');
+                }
+                cardContainer.style.pointerEvents = oldPointerEvents;
+            }
         }
     };
 
@@ -252,11 +296,13 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         if (!analysisData) return;
 
         try {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
             // Use the pre-generated blob if ready (makes the click instant for iOS),
-            // otherwise generate on the fly and hope the browser allows it.
+            // otherwise generate on the fly with the appropriate platform strategy
             let blob = downloadBlob;
             if (!blob) {
-                const canvas = await captureBothSides();
+                const canvas = await captureBothSides(isIOS);
                 if (!canvas) return;
                 blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
             }

@@ -90,13 +90,16 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     // Pre-generate the download blob in the background when results are ready.
     // This allows action handlers to be fully synchronous and resilient on mobile.
     useEffect(() => {
-        if (isMobileDevice() && step === 'results' && analysisData && cardRef.current) {
+        if (step === 'results' && analysisData && cardRef.current) {
             const generateBlob = async () => {
                 setIsGeneratingBlob(true);
                 try {
                     // Give Framer Motion and fonts a tiny moment to settle before capturing
                     await new Promise(resolve => setTimeout(resolve, 50));
-                    const canvas = await captureBothSides(true); // Always offscreen for mobile
+
+                    // We generate via offscreen clone for the background blob,
+                    // as it's safer and invisible to the user.
+                    const canvas = await captureBothSides(true);
                     if (!canvas) return;
 
                     const blob = await new Promise<Blob | null>((resolve) =>

@@ -180,8 +180,8 @@ const ClaimPhysicalCard: React.FC<ClaimPhysicalCardProps> = ({ aiRunId, defaultL
                     <input
                         value={linkedinUrl}
                         onChange={(event) => setLinkedinUrl(event.target.value)}
-                        placeholder="LinkedIn Profile URL"
-                        type="url"
+                        placeholder="LinkedIn Profile URL (e.g. linkedin.com/in/yourname)"
+                        type="text"
                         required
                         disabled={submitting || isSoldOut}
                         style={{ width: '100%', padding: '1rem 1.1rem', borderRadius: '0.9rem', border: 'var(--glass-border)', background: 'var(--bg-dark)', color: 'var(--text-primary)', fontSize: '1.02rem' }}

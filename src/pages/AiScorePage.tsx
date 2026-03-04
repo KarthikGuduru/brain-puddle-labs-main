@@ -108,10 +108,10 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                     svgImg.onerror = () => reject(new Error('svg load failed'));
                 });
 
-                // Compute contain-fit dimensions
+                // Compute cover-fit dimensions (fill container, crop excess — matches CSS object-fit: cover)
                 const natW = svgImg.naturalWidth || 800;
                 const natH = svgImg.naturalHeight || 600;
-                const scale = Math.min(containerW / natW, containerH / natH);
+                const scale = Math.max(containerW / natW, containerH / natH);
                 const drawW = natW * scale;
                 const drawH = natH * scale;
                 const offsetX = (containerW - drawW) / 2;

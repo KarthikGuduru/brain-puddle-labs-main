@@ -308,8 +308,6 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             }
             if (!blob) return;
 
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
             // iOS Primary: Web Share API (native "Save Image" option without blank window flash)
             if (isIOS && navigator.share) {
                 const file = new File([blob], `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`, { type: 'image/jpeg' });

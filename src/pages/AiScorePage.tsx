@@ -713,17 +713,36 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
                     // Silent background upload of the exact browser-rendered card to R2
                     const runId = trackedRunId || aiRunId || null;
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        if (typeof reader.result === 'string') {
-                            fetch('/api/save-card-blob', {
+                    const blobToBase64 = (b: Blob): Promise<string> =>
+                        new Promise((resolve, reject) => {
+                            const r = new FileReader();
+                            r.onloadend = () => (typeof r.result === 'string' ? resolve(r.result) : reject(new Error('FileReader failed')));
+                            r.onerror = reject;
+                            r.readAsDataURL(b);
+                        });
+
+                    // Use a smaller JPEG for upload (front side only at 1x) to stay under body limits
+                    const uploadCanvas = document.createElement('canvas');
+                    const frontOnly = canvas;
+                    uploadCanvas.width = frontOnly.width;
+                    uploadCanvas.height = frontOnly.height;
+                    const uctx = uploadCanvas.getContext('2d');
+                    if (uctx) uctx.drawImage(frontOnly, 0, 0);
+                    const uploadBlob = await new Promise<Blob | null>((res) => (uctx ? uploadCanvas : canvas).toBlob(res, 'image/jpeg', 0.75));
+
+                    if (uploadBlob) {
+                        blobToBase64(uploadBlob).then((dataUrl) => {
+                            console.log('save-card-blob: uploading', Math.round(dataUrl.length / 1024), 'KB, runId=', runId);
+                            return fetch('/api/save-card-blob', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ cardImageBase64: reader.result, aiRunId: runId })
-                            }).catch((err) => console.warn('save-card-blob failed:', err));
-                        }
-                    };
-                    reader.readAsDataURL(blob);
+                                body: JSON.stringify({ cardImageBase64: dataUrl, aiRunId: runId })
+                            });
+                        }).then((resp) => {
+                            if (!resp.ok) console.warn('save-card-blob response:', resp.status, resp.statusText);
+                            else console.log('save-card-blob: success');
+                        }).catch((err) => console.warn('save-card-blob failed:', err));
+                    }
                 }
             }
 

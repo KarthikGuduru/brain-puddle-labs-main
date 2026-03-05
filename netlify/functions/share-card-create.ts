@@ -95,10 +95,18 @@ export const handler: Handler = async (event) => {
         );
 
         if (aiRunId) {
-            await d1Query(
-                `UPDATE ai_runs SET share_clicked = 1, r2_object_key = COALESCE(r2_object_key, ?) WHERE id = ?`,
-                [objectKey, aiRunId]
-            );
+            try {
+                await d1Query(
+                    `UPDATE ai_runs SET share_clicked = 1, r2_object_key = COALESCE(r2_object_key, ?) WHERE id = ?`,
+                    [objectKey, aiRunId]
+                );
+            } catch {
+                // r2_object_key column may not exist yet — still update share_clicked
+                await d1Query(
+                    `UPDATE ai_runs SET share_clicked = 1 WHERE id = ?`,
+                    [aiRunId]
+                );
+            }
         }
 
         return {

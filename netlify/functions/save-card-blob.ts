@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { d1Query, isD1Configured } from './_lib/d1';
-import { uploadCardImage } from './_lib/r2';
+import { isR2Configured, uploadCardImage } from './_lib/r2';
 import { makeId, parseJsonBody } from './_lib/utils';
 
 interface SaveBlobPayload {
@@ -27,6 +27,15 @@ export const handler: Handler = async (event) => {
             return { statusCode: 400, body: JSON.stringify({ error: 'Missing cardImageBase64' }) };
         }
 
+        if (!isR2Configured()) {
+            console.error('save-card-blob: R2 is NOT configured — skipping upload');
+            return { statusCode: 200, body: JSON.stringify({ ok: false, reason: 'R2 not configured' }) };
+        }
+
+        if (!isD1Configured()) {
+            console.error('save-card-blob: D1 is NOT configured — cannot link to ai_run');
+        }
+
         const shareId = makeId('blob').replace(/^blob_/, '');
         const { objectKey } = await uploadCardImage(cardImageBase64, shareId);
 
@@ -37,8 +46,8 @@ export const handler: Handler = async (event) => {
                     `UPDATE ai_runs SET r2_object_key = COALESCE(r2_object_key, ?) WHERE id = ?`,
                     [objectKey, aiRunId]
                 );
-            } catch {
-                // Non-critical
+            } catch (err) {
+                console.error('save-card-blob: D1 UPDATE by aiRunId failed:', (err as Error).message);
             }
         }
 
@@ -50,10 +59,12 @@ export const handler: Handler = async (event) => {
                      WHERE id = (SELECT id FROM ai_runs WHERE r2_object_key IS NULL ORDER BY created_at DESC LIMIT 1)`,
                     [objectKey]
                 );
-            } catch {
-                // Non-critical
+            } catch (err) {
+                console.error('save-card-blob: D1 UPDATE fallback failed:', (err as Error).message);
             }
         }
+
+        console.log('save-card-blob: uploaded', objectKey, 'aiRunId=', aiRunId, 'd1=', isD1Configured());
 
         return {
             statusCode: 200,

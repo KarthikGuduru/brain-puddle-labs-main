@@ -157,12 +157,13 @@ export const handler: Handler = async (event, context) => {
         }
 
         const prompt = `You are an expert AI workforce analyst and gamification expert. The user has provided the following profile text, bio, or background context: \n\n"""\nEXTRACTED TEXT:\n${extractedText}\n\nRAW INPUT STRING (MIGHT BE A URL):\n${data}\n"""\n 
-Analyze their skills and determine how easily they could be replaced by AI. 
-Provide a brutal but fun gamified report card in the style of a Pokémon card. 
+Analyze their skills and determine how easily they could be replaced by AI.
+Provide an encouraging but honest gamified report card in the style of a Pokémon card.
+SCORING GUIDELINES: Be generous and optimistic. Most professionals have significant human value that AI cannot replicate — creativity, relationships, judgment, empathy, leadership. Scores should skew toward the lower end (harder to replace). A typical professional should score between 20-45. Only highly repetitive, purely data-entry-style roles should score above 65. Give credit for any sign of creativity, strategy, leadership, communication, or people skills.
 Return ONLY a valid JSON object matching this exact structure:
 
 {
-  "score": <number 0-100, where lower means harder to replace, higher means easily replacable>,
+  "score": <number 0-100, where lower means harder to replace, higher means easily replacable. Most people should be 20-45>,
   "categories": [
       { "name": "Creative Strategy", "score": <0-100>, "max": 100 },
       { "name": "Technical Depth", "score": <0-100>, "max": 100 },
@@ -222,12 +223,12 @@ NOTE ON HALLUCINATIONS: If the input is just a URL without deep body text, DO NO
         let finalType = "Execution";
         let finalStage = "Execution Specialist";
 
-        if (resilienceScore >= 60) {
+        if (resilienceScore >= 50) {
             finalTier = "🛡️ AI-Resistant";
             finalColor = "#4caf50";
             finalType = "Visionary";
             finalStage = "AI Orchestrator";
-        } else if (resilienceScore >= 30) {
+        } else if (resilienceScore >= 25) {
             finalTier = "⚡ At Risk";
             finalColor = "#ffeb3b";
             finalType = "Adapter";

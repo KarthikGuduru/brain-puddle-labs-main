@@ -298,18 +298,13 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         try {
             const isMobile = isMobileDevice();
 
-            // On mobile, use the pre-generated blob (set by the results-screen useEffect)
-            // for instant download. On desktop, always capture fresh from the visible card
-            // to guarantee we get the current scan's card (the analyzing-phase blob may be
-            // stale or null if the hidden off-screen capture failed).
-            let blob: Blob | null = null;
-            if (isMobile && downloadBlob) {
-                blob = downloadBlob;
-            } else {
-                const canvas = await captureBothSides(true);
-                if (canvas) {
-                    blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
-                }
+            // Use the pre-generated blob if ready (makes the click instant for mobile),
+            // otherwise generate on the fly with the appropriate platform strategy
+            let blob = downloadBlob;
+            if (!blob) {
+                const canvas = await captureBothSides(isMobile);
+                if (!canvas) return;
+                blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
             }
             if (!blob) return;
 

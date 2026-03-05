@@ -8,6 +8,7 @@ import { getClientIp, makeId, nowIso, parseJsonBody } from './_lib/utils';
 
 interface ClaimPayload {
     fullName?: string;
+    email?: string;
     linkedinUrl?: string;
     deliveryAddress?: string;
     aiRunId?: string | null;
@@ -33,6 +34,7 @@ export const handler: Handler = async (event) => {
     try {
         const body = parseJsonBody<ClaimPayload>(event.body);
         const fullName = String(body.fullName || '').trim();
+        const email = String(body.email || '').trim();
         const linkedinUrl = String(body.linkedinUrl || '').trim();
         const deliveryAddress = String(body.deliveryAddress || '').trim();
         const aiRunId = body.aiRunId ? String(body.aiRunId) : null;
@@ -136,8 +138,8 @@ export const handler: Handler = async (event) => {
         if (updatedRows.length === 0) {
             await d1Query(
                 `INSERT INTO claim_submissions
-                 (id, created_at, full_name_enc, delivery_address_enc, linkedin_slug, linkedin_hash, ai_run_id, ip_hash, ua_hash, status, card_id)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'sold_out', ?)`,
+                 (id, created_at, full_name_enc, delivery_address_enc, linkedin_slug, linkedin_hash, ai_run_id, ip_hash, ua_hash, status, card_id, email)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'sold_out', ?, ?)`,
                 [
                     claimId,
                     createdAt,
@@ -148,7 +150,8 @@ export const handler: Handler = async (event) => {
                     aiRunId,
                     ipHash,
                     uaHash,
-                    cardId
+                    cardId,
+                    email
                 ]
             );
             return {
@@ -159,8 +162,8 @@ export const handler: Handler = async (event) => {
 
         await d1Query(
             `INSERT INTO claim_submissions
-             (id, created_at, full_name_enc, delivery_address_enc, linkedin_slug, linkedin_hash, ai_run_id, ip_hash, ua_hash, status, card_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'accepted', ?)`,
+             (id, created_at, full_name_enc, delivery_address_enc, linkedin_slug, linkedin_hash, ai_run_id, ip_hash, ua_hash, status, card_id, email)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'accepted', ?, ?)`,
             [
                 claimId,
                 createdAt,
@@ -171,7 +174,8 @@ export const handler: Handler = async (event) => {
                 aiRunId,
                 ipHash,
                 uaHash,
-                cardId
+                cardId,
+                email
             ]
         );
 

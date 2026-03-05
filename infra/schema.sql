@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS claim_submissions (
     ip_hash TEXT,
     ua_hash TEXT,
     status TEXT NOT NULL,
-    card_id TEXT
+    card_id TEXT,
+    email TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_claim_submissions_created_at

@@ -29,6 +29,7 @@ const ClaimPhysicalCard: React.FC<ClaimPhysicalCardProps> = ({ aiRunId, defaultL
     const [loadingCounter, setLoadingCounter] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [fullName, setFullName] = useState('');
+    const [email, setEmail] = useState('');
     const [linkedinUrl, setLinkedinUrl] = useState(defaultLinkedinUrl || '');
     const [deliveryAddress, setDeliveryAddress] = useState('');
     const [turnstileToken, setTurnstileToken] = useState('');
@@ -93,6 +94,7 @@ const ClaimPhysicalCard: React.FC<ClaimPhysicalCardProps> = ({ aiRunId, defaultL
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     fullName,
+                    email,
                     linkedinUrl,
                     deliveryAddress,
                     aiRunId,
@@ -127,6 +129,7 @@ const ClaimPhysicalCard: React.FC<ClaimPhysicalCardProps> = ({ aiRunId, defaultL
             }
             setSuccess('Claim submitted. We will contact you with delivery details.');
             setFullName('');
+            setEmail('');
             setDeliveryAddress('');
             if (turnstileSiteKey) {
                 setTurnstileToken('');
@@ -172,6 +175,16 @@ const ClaimPhysicalCard: React.FC<ClaimPhysicalCardProps> = ({ aiRunId, defaultL
                         value={fullName}
                         onChange={(event) => setFullName(event.target.value)}
                         placeholder="Full Name"
+                        required
+                        disabled={submitting || isSoldOut}
+                        style={{ width: '100%', padding: '1rem 1.1rem', borderRadius: '0.9rem', border: 'var(--glass-border)', background: 'var(--bg-dark)', color: 'var(--text-primary)', fontSize: '1.02rem' }}
+                    />
+
+                    <input
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder="Email (for contact)"
+                        type="email"
                         required
                         disabled={submitting || isSoldOut}
                         style={{ width: '100%', padding: '1rem 1.1rem', borderRadius: '0.9rem', border: 'var(--glass-border)', background: 'var(--bg-dark)', color: 'var(--text-primary)', fontSize: '1.02rem' }}

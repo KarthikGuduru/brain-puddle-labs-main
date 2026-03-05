@@ -88,8 +88,49 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         };
     }, []);
 
-    // We now generate the blob synchronously on-demand during the analyzing phase,
-    // so this useEffect is completely removed to prevent overlapping lifecycle bugs.
+    // Safari fallback: the off-screen hidden card isn't laid out by Safari, so
+    // captureBothSides returns null during the analyzing step and no blob is created.
+    // When we land on the results screen with no blob, capture from the now-visible card.
+    const blobUploadedRef = useRef(false);
+    useEffect(() => {
+        if (step !== 'results' || !analysisData || !cardRef.current) return;
+        if (downloadBlob || blobUploadedRef.current) return; // already have a blob or already uploaded
+
+        const captureAndUpload = async () => {
+            blobUploadedRef.current = true; // prevent re-runs
+            // Small delay to let the results card finish rendering/animating
+            await new Promise(r => setTimeout(r, 600));
+
+            const canvas = await captureBothSides(true);
+            if (!canvas) return;
+
+            const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+            if (!blob) return;
+
+            // Cache so download button is instant
+            setDownloadBlob(blob);
+
+            // Upload to R2
+            const runId = aiRunId || null;
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result;
+                if (typeof dataUrl !== 'string') return;
+                console.log('save-card-blob (Safari fallback): uploading', Math.round(dataUrl.length / 1024), 'KB, runId=', runId);
+                fetch('/api/save-card-blob', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cardImageBase64: dataUrl, aiRunId: runId })
+                }).then(resp => {
+                    if (!resp.ok) console.warn('save-card-blob response:', resp.status, resp.statusText);
+                    else console.log('save-card-blob: success (Safari fallback)');
+                }).catch(err => console.warn('save-card-blob failed:', err));
+            };
+            reader.readAsDataURL(blob);
+        };
+
+        captureAndUpload();
+    }, [step, analysisData, downloadBlob, aiRunId]);
 
     /**
      * html2canvas ignores CSS object-fit, so SVG data-URL images render
@@ -557,6 +598,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
         setAnalysisData(null);
         setAiRunId(null);
+        setDownloadBlob(null);
+        blobUploadedRef.current = false;
         setStep('analyzing');
         smoothScrollTo(0, 800);
         // Let the useEffect handle the rotating text

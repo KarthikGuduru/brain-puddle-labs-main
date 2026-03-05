@@ -949,8 +949,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                         <button onClick={handleDownload} disabled={!analysisData || isGeneratingBlob} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', height: 'fit-content', opacity: analysisData && !isGeneratingBlob ? 1 : 0.65, cursor: analysisData && !isGeneratingBlob ? 'pointer' : 'not-allowed' }}>
                                             <span>{isGeneratingBlob ? '⏳' : '📥'}</span> {isGeneratingBlob ? 'Preparing...' : 'Download'}
                                         </button>
-                                        <button onClick={handleLinkedInShare} disabled={isSharing || !analysisData} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#0a66c2', color: 'white', borderColor: '#0a66c2', height: 'fit-content', opacity: isSharing || !analysisData ? 0.7 : 1, cursor: isSharing || !analysisData ? 'not-allowed' : 'pointer' }}>
-                                            <span>🔗</span> {isSharing ? 'Opening LinkedIn...' : 'Share on LinkedIn'}
+                                        <button onClick={handleLinkedInShare} disabled={isSharing || !analysisData || isGeneratingBlob} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#0a66c2', color: 'white', borderColor: '#0a66c2', height: 'fit-content', opacity: isSharing || !analysisData || isGeneratingBlob ? 0.7 : 1, cursor: isSharing || !analysisData || isGeneratingBlob ? 'not-allowed' : 'pointer' }}>
+                                            <span>{isGeneratingBlob ? '⏳' : isSharing ? '🔗' : '🔗'}</span> {isGeneratingBlob ? 'Preparing...' : isSharing ? 'Opening LinkedIn...' : 'Share on LinkedIn'}
                                         </button>
                                     </div>
 

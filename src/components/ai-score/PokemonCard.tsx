@@ -174,16 +174,12 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
                                 <div className="card-photo-placeholder">👤</div>
                             )}
                         </div>
-                        <div className="card-title-bar" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '6px 8px', textAlign: 'center' }}>
+                        <div className="card-title-bar" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '6px 12px', textAlign: 'center' }}>
                             <span style={{
                                 fontWeight: 900,
                                 fontSize: name.length > 20 ? '0.7rem' : name.length > 12 ? '0.85rem' : '1rem',
-                                lineHeight: 1.2,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical'
+                                lineHeight: 1.3,
+                                wordBreak: 'break-word'
                             }}>{name}</span>
                         </div>
                     </div>

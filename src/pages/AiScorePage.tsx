@@ -65,6 +65,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const [aiRunId, setAiRunId] = useState<string | null>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [isSharing, setIsSharing] = useState(false);
+    const [mobileShareAlert, setMobileShareAlert] = useState(false);
     const [downloadBlob, setDownloadBlob] = useState<Blob | null>(null);
     const [isGeneratingBlob, setIsGeneratingBlob] = useState(false);
     const transitionTimeoutsRef = useRef<number[]>([]);
@@ -291,6 +292,22 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             }
             if (!blob) return;
 
+            // Mobile Primary: Web Share API (native "Save Image" option without blank window flash)
+            if (isMobile && navigator.share) {
+                const file = new File([blob], `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`, { type: 'image/jpeg' });
+                if (navigator.canShare?.({ files: [file] })) {
+                    try {
+                        await navigator.share({ files: [file] });
+                        trackEvent('ai_card_downloaded', { aiRunId: aiRunId || null, method: 'web_share' });
+                        return; // Done!
+                    } catch (e) {
+                        // User cancelled or share failed, log and abort rather than forcing a web download
+                        console.error("Web share cancelled or failed", e);
+                        return;
+                    }
+                }
+            }
+
             // Standard fallback for Desktop/Mac/iPad, or Mobile where Web Share is heavily restricted
             const blobUrl = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -318,7 +335,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         trackEvent('ai_share_clicked', { aiRunId: aiRunId || null });
 
         if (isMobileDevice()) {
-            alert('LinkedIn mobile sharing is currently limited. Your card has been downloaded instead!');
+            setMobileShareAlert(true);
+            setTimeout(() => setMobileShareAlert(false), 5000);
             await handleDownload();
             setIsSharing(false);
             return;
@@ -935,6 +953,19 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                             <span>🔗</span> {isSharing ? 'Opening LinkedIn...' : 'Share on LinkedIn'}
                                         </button>
                                     </div>
+
+                                    <AnimatePresence>
+                                        {mobileShareAlert && (
+                                            <motion.p
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                style={{ fontSize: '0.8rem', color: '#F25F22', margin: '0', textAlign: 'center', maxWidth: '300px' }}
+                                            >
+                                                LinkedIn mobile sharing is currently limited. Your card has been downloaded instead!
+                                            </motion.p>
+                                        )}
+                                    </AnimatePresence>
 
                                     {featureFlags.claimForm && analysisData && (
                                         <ClaimPhysicalCard

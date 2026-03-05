@@ -215,17 +215,22 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         if (useOffscreenClone) {
             const rect = cardContainer.getBoundingClientRect();
             offscreen = document.createElement('div');
-            offscreen.style.position = 'absolute';
-            // Put it at current scroll height to avoid html2canvas viewport bugs, but hide it horizontally
-            offscreen.style.top = `${window.scrollY}px`;
-            offscreen.style.left = '-9999px';
+            offscreen.style.position = 'fixed';
+            // Keep inside viewport so Safari computes layout, but behind all content
+            offscreen.style.top = '0';
+            offscreen.style.left = '0';
             offscreen.style.width = `${rect.width}px`;
             offscreen.style.height = `${rect.height}px`;
+            offscreen.style.overflow = 'hidden';
             offscreen.style.pointerEvents = 'none';
             offscreen.style.zIndex = '-9999';
+            offscreen.style.opacity = '0.01';
             document.body.appendChild(offscreen);
 
             captureRoot = cardContainer.cloneNode(true) as HTMLDivElement;
+            // Ensure full opacity on the clone so html2canvas renders it properly
+            // (the parent offscreen container is hidden via opacity: 0.01 + z-index)
+            captureRoot.style.opacity = '1';
             offscreen.appendChild(captureRoot);
         }
 

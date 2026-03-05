@@ -57,23 +57,20 @@ export const handler: Handler = async (event) => {
             };
         }
 
+        const baseCols = 'id, created_at, input_type, linkedin_slug, linkedin_hash, input_char_count, score, tier, analysis_latency_ms, image_source, share_clicked';
+        const baseVals = '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0';
+        const baseParams = [
+            aiRunId, createdAt, inputType, linkedinSlug, linkedinHash,
+            inputCharCount, score, tier, analysisLatencyMs, imageSource
+        ];
+
+        const cols = r2ObjectKey ? `${baseCols}, r2_object_key` : baseCols;
+        const vals = r2ObjectKey ? `${baseVals}, ?` : baseVals;
+        const params = r2ObjectKey ? [...baseParams, r2ObjectKey] : baseParams;
+
         await d1Query(
-            `INSERT INTO ai_runs
-             (id, created_at, input_type, linkedin_slug, linkedin_hash, input_char_count, score, tier, analysis_latency_ms, image_source, share_clicked, r2_object_key)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
-            [
-                aiRunId,
-                createdAt,
-                inputType,
-                linkedinSlug,
-                linkedinHash,
-                inputCharCount,
-                score,
-                tier,
-                analysisLatencyMs,
-                imageSource,
-                r2ObjectKey
-            ]
+            `INSERT INTO ai_runs (${cols}) VALUES (${vals})`,
+            params
         );
 
         return {

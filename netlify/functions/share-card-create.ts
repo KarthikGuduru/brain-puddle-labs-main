@@ -96,8 +96,8 @@ export const handler: Handler = async (event) => {
 
         if (aiRunId) {
             await d1Query(
-                `UPDATE ai_runs SET share_clicked = 1 WHERE id = ?`,
-                [aiRunId]
+                `UPDATE ai_runs SET share_clicked = 1, r2_object_key = COALESCE(r2_object_key, ?) WHERE id = ?`,
+                [objectKey, aiRunId]
             );
         }
 

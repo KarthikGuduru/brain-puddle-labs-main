@@ -298,13 +298,18 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         try {
             const isMobile = isMobileDevice();
 
-            // Use the pre-generated blob if ready (makes the click instant for mobile),
-            // otherwise generate on the fly with the appropriate platform strategy
-            let blob = downloadBlob;
-            if (!blob) {
-                const canvas = await captureBothSides(isMobile);
-                if (!canvas) return;
-                blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+            // On mobile, use the pre-generated blob (set by the results-screen useEffect)
+            // for instant download. On desktop, always capture fresh from the visible card
+            // to guarantee we get the current scan's card (the analyzing-phase blob may be
+            // stale or null if the hidden off-screen capture failed).
+            let blob: Blob | null = null;
+            if (isMobile && downloadBlob) {
+                blob = downloadBlob;
+            } else {
+                const canvas = await captureBothSides(true);
+                if (canvas) {
+                    blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+                }
             }
             if (!blob) return;
 
@@ -599,11 +604,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
         setAnalysisData(null);
         setAiRunId(null);
+        setDownloadBlob(null);
         blobUploadedRef.current = false;
-        // On mobile, clear the blob so the results-screen useEffect captures fresh.
-        // On desktop, keep the blob (overwritten during analyzing) to avoid breaking
-        // the synchronous gesture chain that programmatic <a>.click() downloads need.
-        if (isMobileDevice()) setDownloadBlob(null);
         setStep('analyzing');
         smoothScrollTo(0, 800);
         // Let the useEffect handle the rotating text

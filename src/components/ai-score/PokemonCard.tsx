@@ -176,7 +176,7 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
                     </div>
 
                     <div className="card-image-container">
-                        <div className="card-image-bg">
+                        <div className="card-image-bg" style={{ background: typeGradient }}>
                             {photoUrl ? (
                                 <img ref={imgRef} src={photoUrl} alt={name} className="card-photo" />
                             ) : (

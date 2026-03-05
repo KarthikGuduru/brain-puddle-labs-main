@@ -88,17 +88,19 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         };
     }, []);
 
-    // Safari fallback: the off-screen hidden card isn't laid out by Safari, so
-    // captureBothSides returns null during the analyzing step and no blob is created.
-    // When we land on the results screen with no blob, capture from the now-visible card.
+    // Mobile Safari fallback: the off-screen hidden card isn't laid out by mobile Safari,
+    // so captureBothSides returns null during the analyzing step and no blob is created.
+    // On mobile only, when we land on results with no blob, capture from the visible card.
+    // Desktop is excluded — download/share already handle missing blobs via fresh capture.
     const blobUploadedRef = useRef(false);
     useEffect(() => {
+        if (!isMobileDevice()) return; // desktop download/share handle their own capture
         if (step !== 'results' || !analysisData || !cardRef.current) return;
-        if (downloadBlob || blobUploadedRef.current) return; // already have a blob or already uploaded
+        if (downloadBlob || blobUploadedRef.current) return;
 
         const captureAndUpload = async () => {
-            blobUploadedRef.current = true; // prevent re-runs
-            // Small delay to let the results card finish rendering/animating
+            blobUploadedRef.current = true;
+            // Let the results card finish rendering/animating
             await new Promise(r => setTimeout(r, 600));
 
             const canvas = await captureBothSides(true);
@@ -107,7 +109,6 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
             if (!blob) return;
 
-            // Cache so download button is instant
             setDownloadBlob(blob);
 
             // Upload to R2
@@ -116,14 +117,14 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             reader.onloadend = () => {
                 const dataUrl = reader.result;
                 if (typeof dataUrl !== 'string') return;
-                console.log('save-card-blob (Safari fallback): uploading', Math.round(dataUrl.length / 1024), 'KB, runId=', runId);
+                console.log('save-card-blob (mobile fallback): uploading', Math.round(dataUrl.length / 1024), 'KB, runId=', runId);
                 fetch('/api/save-card-blob', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ cardImageBase64: dataUrl, aiRunId: runId })
                 }).then(resp => {
                     if (!resp.ok) console.warn('save-card-blob response:', resp.status, resp.statusText);
-                    else console.log('save-card-blob: success (Safari fallback)');
+                    else console.log('save-card-blob: success (mobile fallback)');
                 }).catch(err => console.warn('save-card-blob failed:', err));
             };
             reader.readAsDataURL(blob);

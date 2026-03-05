@@ -25,7 +25,7 @@ interface PokemonCardProps {
 }
 
 const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
-    name, title, photoUrl, type, hp, skills, stats, powerUps, pokedexEntry, stage, primaryDomain, operatingMode, humanLeverage, replaceabilityScore, replaceabilityTier
+    name, photoUrl, type, hp, skills, stats, powerUps, pokedexEntry, stage, replaceabilityScore, replaceabilityTier
 }, ref) => {
     const [isFlipped, setIsFlipped] = useState(false);
     const [statColors, setStatColors] = useState<string[]>(['#111', '#111', '#111', '#111']);
@@ -159,17 +159,8 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
 
                     <div className="card-header">
                         <div className="card-stage">{replaceabilityTier ? replaceabilityTier.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim().toUpperCase() : stage.toUpperCase()}</div>
-                        <h2 className="card-name" style={{
-                            fontSize: name.length > 20 ? '1rem' : name.length > 12 ? '1.3rem' : '1.8rem',
-                            lineHeight: 1.1,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical'
-                        }}>{name}</h2>
                         <div className="card-hp">
-                            <span className="hp-label">RESILIENCE</span>
+                            <span className="hp-label">HP</span>
                             <span className="hp-value">{replaceabilityScore != null ? 100 - replaceabilityScore : hp}</span>
                             <div className="type-icon">{type === 'Creative' ? '✨' : type === 'Engineering' ? '⚙️' : '🧠'}</div>
                         </div>
@@ -183,11 +174,17 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
                                 <div className="card-photo-placeholder">👤</div>
                             )}
                         </div>
-                        <div className="card-title-bar" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '6px', fontSize: '0.55rem', padding: '4px', textAlign: 'center', lineHeight: '1.2' }}>
-                            <span style={{ fontWeight: 800, fontStyle: 'italic', width: '100%', marginBottom: '1px', fontSize: '0.65rem' }}>{title.toUpperCase()}</span>
-                            <span>PRIMARY DOMAIN: {primaryDomain.toUpperCase()}</span> |
-                            <span>OPERATING MODE: {operatingMode.toUpperCase()}</span> |
-                            <span>HUMAN LEVERAGE: {humanLeverage.toUpperCase()}</span>
+                        <div className="card-title-bar" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '6px 8px', textAlign: 'center' }}>
+                            <span style={{
+                                fontWeight: 900,
+                                fontSize: name.length > 20 ? '0.7rem' : name.length > 12 ? '0.85rem' : '1rem',
+                                lineHeight: 1.2,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical'
+                            }}>{name}</span>
                         </div>
                     </div>
 

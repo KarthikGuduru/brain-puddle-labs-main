@@ -124,7 +124,7 @@ const AiScoreSharedPage: React.FC<{ onContactOpen?: () => void }> = ({ onContact
 
     return (
         <main className="main-content" style={{ paddingTop: '6rem', minHeight: '100vh' }}>
-            <div style={{ maxWidth: '960px', margin: '0 auto', padding: '0 1.5rem 3rem' }}>
+            <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 1.5rem 3rem' }}>
                 <Link
                     to="/"
                     style={{
@@ -171,11 +171,11 @@ const AiScoreSharedPage: React.FC<{ onContactOpen?: () => void }> = ({ onContact
                                 }}
                                 style={{
                                     width: '100%',
-                                    maxWidth: '460px',
+                                    maxWidth: '720px',
                                     borderRadius: '1rem',
                                     border: 'var(--glass-border)',
                                     boxShadow: 'var(--shadow-md)',
-                                    objectFit: 'cover'
+                                    imageRendering: 'auto'
                                 }}
                             />
                         </div>
@@ -190,13 +190,6 @@ const AiScoreSharedPage: React.FC<{ onContactOpen?: () => void }> = ({ onContact
                     )}
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-                        <div style={{ background: 'var(--bg-dark)', border: 'var(--glass-border)', borderRadius: '1rem', padding: '1rem' }}>
-                            <p style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-                                Replaceability Index
-                            </p>
-                            <p style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)' }}>{score}/100</p>
-                        </div>
-
                         <div style={{ background: 'var(--bg-dark)', border: 'var(--glass-border)', borderRadius: '1rem', padding: '1rem' }}>
                             <p style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
                                 AI Resilience Score

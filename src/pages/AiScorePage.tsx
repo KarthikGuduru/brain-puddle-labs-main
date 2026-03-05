@@ -185,20 +185,27 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         return () => restorers.forEach(fn => fn());
     };
 
-    const captureBothSides = async (useOffscreenClone = false) => {
+    const captureBothSides = async (useOffscreenClone = true) => {
         if (!cardRef.current) return null;
 
         const cardContainer = cardRef.current;
         let captureRoot = cardContainer;
         let offscreen: HTMLDivElement | null = null;
 
+        // Force offscreen clone to prevent corrupting live DOM and Framer Motion state
+        useOffscreenClone = true;
+
         if (useOffscreenClone) {
-            // Create an off-screen container to capture the card without mutating the visible DOM
+            const rect = cardContainer.getBoundingClientRect();
             offscreen = document.createElement('div');
-            offscreen.style.position = 'fixed';
-            offscreen.style.top = '-9999px';
+            offscreen.style.position = 'absolute';
+            // Put it at current scroll height to avoid html2canvas viewport bugs, but hide it horizontally
+            offscreen.style.top = `${window.scrollY}px`;
             offscreen.style.left = '-9999px';
+            offscreen.style.width = `${rect.width}px`;
+            offscreen.style.height = `${rect.height}px`;
             offscreen.style.pointerEvents = 'none';
+            offscreen.style.zIndex = '-9999';
             document.body.appendChild(offscreen);
 
             captureRoot = cardContainer.cloneNode(true) as HTMLDivElement;
@@ -214,34 +221,14 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
         const opts = { backgroundColor: null, useCORS: true, scale: 2 };
 
-        let oldPointerEvents = '';
-        let oldFrontTransform = '';
-        let oldBackTransform = '';
-        let oldInnerTransform = '';
-        let oldBackDisplay = backEl.style.display;
-        let oldFrontDisplay = frontEl.style.display;
-        const hadFrontFocus = captureRoot.classList.contains('front-focused');
-
-        if (!useOffscreenClone) {
-            oldPointerEvents = cardContainer.style.pointerEvents;
-            cardContainer.style.pointerEvents = 'none';
-            oldFrontTransform = frontEl.style.transform;
-            oldBackTransform = backEl.style.transform;
-        }
-
         const innerEl = captureRoot.querySelector('.pokemon-card-inner') as HTMLElement;
-        if (!useOffscreenClone && innerEl) {
-            oldInnerTransform = innerEl.style.transform;
-        }
 
-        // Flatten transforms for a clean 2D capture
+        // Flatten transforms for a clean 2D capture within the offscreen container
         if (innerEl) innerEl.style.transform = 'none';
         frontEl.style.transform = 'none';
         backEl.style.transform = 'none';
 
-        if (hadFrontFocus) {
-            captureRoot.classList.remove('front-focused');
-        }
+        captureRoot.classList.remove('front-focused');
 
         // Pre-rasterise SVGs so they render properly
         const restoreSvg = await preRasterizeSvgImages(captureRoot);
@@ -281,19 +268,9 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
             return canvas;
         } finally {
+            restoreSvg();
             if (useOffscreenClone) {
                 if (offscreen) document.body.removeChild(offscreen);
-            } else {
-                restoreSvg();
-                backEl.style.display = oldBackDisplay;
-                frontEl.style.display = oldFrontDisplay;
-                if (innerEl) innerEl.style.transform = oldInnerTransform;
-                frontEl.style.transform = oldFrontTransform;
-                backEl.style.transform = oldBackTransform;
-                if (hadFrontFocus) {
-                    captureRoot.classList.add('front-focused');
-                }
-                cardContainer.style.pointerEvents = oldPointerEvents;
             }
         }
     };

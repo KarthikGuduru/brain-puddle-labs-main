@@ -31,6 +31,7 @@ type AiRun = {
     analysisLatencyMs: number;
     imageSource: string;
     shareClicked: number;
+    r2ObjectKey: string | null;
 };
 
 interface LocalStoreState {

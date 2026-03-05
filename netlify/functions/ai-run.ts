@@ -12,6 +12,7 @@ interface AiRunPayload {
     tier?: string;
     analysisLatencyMs?: number;
     imageSource?: string;
+    r2_object_key?: string;
 }
 
 export const handler: Handler = async (event) => {
@@ -32,6 +33,7 @@ export const handler: Handler = async (event) => {
         const tier = String(body.tier || '⚔️ AI-Resistant');
         const analysisLatencyMs = Math.max(0, Number(body.analysisLatencyMs || 0));
         const imageSource = String(body.imageSource || 'unknown');
+        const r2ObjectKey = body.r2_object_key ? String(body.r2_object_key) : null;
 
         if (!isD1Configured()) {
             localStore.aiRuns.unshift({
@@ -45,7 +47,8 @@ export const handler: Handler = async (event) => {
                 tier,
                 analysisLatencyMs,
                 imageSource,
-                shareClicked: 0
+                shareClicked: 0,
+                r2ObjectKey: r2ObjectKey
             });
             return {
                 statusCode: 200,
@@ -56,8 +59,8 @@ export const handler: Handler = async (event) => {
 
         await d1Query(
             `INSERT INTO ai_runs
-             (id, created_at, input_type, linkedin_slug, linkedin_hash, input_char_count, score, tier, analysis_latency_ms, image_source, share_clicked)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+             (id, created_at, input_type, linkedin_slug, linkedin_hash, input_char_count, score, tier, analysis_latency_ms, image_source, share_clicked, r2_object_key)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
             [
                 aiRunId,
                 createdAt,
@@ -68,7 +71,8 @@ export const handler: Handler = async (event) => {
                 score,
                 tier,
                 analysisLatencyMs,
-                imageSource
+                imageSource,
+                r2ObjectKey
             ]
         );
 

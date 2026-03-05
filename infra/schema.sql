@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS claim_submissions (
     ai_run_id TEXT,
     ip_hash TEXT,
     ua_hash TEXT,
-    status TEXT NOT NULL
+    status TEXT NOT NULL,
+    card_id TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_claim_submissions_created_at
@@ -35,7 +36,8 @@ CREATE TABLE IF NOT EXISTS ai_runs (
     tier TEXT,
     analysis_latency_ms INTEGER,
     image_source TEXT,
-    share_clicked INTEGER DEFAULT 0
+    share_clicked INTEGER DEFAULT 0,
+    r2_object_key TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_ai_runs_created_at

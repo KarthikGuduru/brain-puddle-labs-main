@@ -103,6 +103,25 @@ export const handler: Handler = async (event) => {
             };
         }
 
+        // Look up the R2 card image key for this AI run
+        let cardId: string | null = null;
+        if (aiRunId) {
+            const { rows: runRows } = await d1Query(
+                `SELECT r2_object_key FROM ai_runs WHERE id = ? LIMIT 1`,
+                [aiRunId]
+            );
+            cardId = runRows[0]?.r2_object_key ? String(runRows[0].r2_object_key) : null;
+
+            // Fallback: check shared_cards if ai_runs doesn't have the key
+            if (!cardId) {
+                const { rows: shareRows } = await d1Query(
+                    `SELECT r2_object_key FROM shared_cards WHERE ai_run_id = ? LIMIT 1`,
+                    [aiRunId]
+                );
+                cardId = shareRows[0]?.r2_object_key ? String(shareRows[0].r2_object_key) : null;
+            }
+        }
+
         await ensureInventoryRow();
         const { rows: updatedRows } = await d1Query(
             `UPDATE inventory
@@ -117,8 +136,8 @@ export const handler: Handler = async (event) => {
         if (updatedRows.length === 0) {
             await d1Query(
                 `INSERT INTO claim_submissions
-                 (id, created_at, full_name_enc, delivery_address_enc, linkedin_slug, linkedin_hash, ai_run_id, ip_hash, ua_hash, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'sold_out')`,
+                 (id, created_at, full_name_enc, delivery_address_enc, linkedin_slug, linkedin_hash, ai_run_id, ip_hash, ua_hash, status, card_id)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'sold_out', ?)`,
                 [
                     claimId,
                     createdAt,
@@ -128,7 +147,8 @@ export const handler: Handler = async (event) => {
                     linkedinHash,
                     aiRunId,
                     ipHash,
-                    uaHash
+                    uaHash,
+                    cardId
                 ]
             );
             return {
@@ -139,8 +159,8 @@ export const handler: Handler = async (event) => {
 
         await d1Query(
             `INSERT INTO claim_submissions
-             (id, created_at, full_name_enc, delivery_address_enc, linkedin_slug, linkedin_hash, ai_run_id, ip_hash, ua_hash, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'accepted')`,
+             (id, created_at, full_name_enc, delivery_address_enc, linkedin_slug, linkedin_hash, ai_run_id, ip_hash, ua_hash, status, card_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'accepted', ?)`,
             [
                 claimId,
                 createdAt,
@@ -150,7 +170,8 @@ export const handler: Handler = async (event) => {
                 linkedinHash,
                 aiRunId,
                 ipHash,
-                uaHash
+                uaHash,
+                cardId
             ]
         );
 

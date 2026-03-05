@@ -1,4 +1,6 @@
 import { Handler } from '@netlify/functions';
+import { uploadCardImage } from './_lib/r2';
+import { makeId } from './_lib/utils';
 
 const getInitials = (name: string) =>
     String(name || "BrainPuddle User")
@@ -82,22 +84,35 @@ export const handler: Handler = async (event) => {
 
     try {
         const { name, imagePromptBase64 } = JSON.parse(event.body || '{}');
+        const shareId = makeId('sh').replace(/^sh_/, '');
 
         // If the user uploaded an image, pass it through unchanged
         if (imagePromptBase64) {
+            // Upload the user's custom photo to R2
+            const { objectKey } = await uploadCardImage(imagePromptBase64, shareId);
+
             return {
                 statusCode: 200,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageUrl: imagePromptBase64 })
+                body: JSON.stringify({
+                    imageUrl: imagePromptBase64,
+                    r2_object_key: objectKey
+                })
             };
         }
 
-        // No user image → return stylised initials SVG (no Flux tokens used)
+        // No user image → generate stylised initials SVG
+        const svgBase64 = buildStylisedInitialsImage(name);
+
+        // Upload the generated SVG to R2
+        const { objectKey } = await uploadCardImage(svgBase64, shareId);
+
         return {
             statusCode: 200,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                imageUrl: buildStylisedInitialsImage(name),
+                imageUrl: svgBase64,
+                r2_object_key: objectKey,
                 fallback: false
             })
         };

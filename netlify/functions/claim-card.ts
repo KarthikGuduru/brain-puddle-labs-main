@@ -17,6 +17,36 @@ interface ClaimPayload {
 
 const DEFAULT_TOTAL = 100;
 
+/**
+ * INSERT into claim_submissions, falling back to base columns
+ * if the newer card_id / email columns don't exist yet.
+ */
+const insertClaim = async (
+    params: {
+        id: string; createdAt: string; fullName: string; deliveryAddress: string;
+        linkedinSlug: string; linkedinHash: string; aiRunId: string | null;
+        ipHash: string; uaHash: string; status: string; cardId: string | null; email: string;
+    }
+) => {
+    const { id, createdAt, fullName, deliveryAddress, linkedinSlug, linkedinHash, aiRunId, ipHash, uaHash, status, cardId, email } = params;
+    try {
+        await d1Query(
+            `INSERT INTO claim_submissions
+             (id, created_at, full_name_enc, delivery_address_enc, linkedin_slug, linkedin_hash, ai_run_id, ip_hash, ua_hash, status, card_id, email)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [id, createdAt, fullName, deliveryAddress, linkedinSlug, linkedinHash, aiRunId, ipHash, uaHash, status, cardId, email]
+        );
+    } catch (err) {
+        console.warn('Full INSERT failed, retrying without card_id/email:', (err as Error).message);
+        await d1Query(
+            `INSERT INTO claim_submissions
+             (id, created_at, full_name_enc, delivery_address_enc, linkedin_slug, linkedin_hash, ai_run_id, ip_hash, ua_hash, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [id, createdAt, fullName, deliveryAddress, linkedinSlug, linkedinHash, aiRunId, ipHash, uaHash, status]
+        );
+    }
+};
+
 const ensureInventoryRow = async () => {
     await d1Query(
         `INSERT INTO inventory (key, total, claimed, remaining, updated_at)
@@ -136,48 +166,22 @@ export const handler: Handler = async (event) => {
         );
 
         if (updatedRows.length === 0) {
-            await d1Query(
-                `INSERT INTO claim_submissions
-                 (id, created_at, full_name_enc, delivery_address_enc, linkedin_slug, linkedin_hash, ai_run_id, ip_hash, ua_hash, status, card_id, email)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'sold_out', ?, ?)`,
-                [
-                    claimId,
-                    createdAt,
-                    fullName,
-                    deliveryAddress,
-                    linkedinSlug,
-                    linkedinHash,
-                    aiRunId,
-                    ipHash,
-                    uaHash,
-                    cardId,
-                    email
-                ]
-            );
+            await insertClaim({
+                id: claimId, createdAt, fullName, deliveryAddress,
+                linkedinSlug, linkedinHash, aiRunId, ipHash, uaHash,
+                status: 'sold_out', cardId, email
+            });
             return {
                 statusCode: 409,
                 body: JSON.stringify({ error: 'SOLD_OUT', remainingCount: 0 })
             };
         }
 
-        await d1Query(
-            `INSERT INTO claim_submissions
-             (id, created_at, full_name_enc, delivery_address_enc, linkedin_slug, linkedin_hash, ai_run_id, ip_hash, ua_hash, status, card_id, email)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'accepted', ?, ?)`,
-            [
-                claimId,
-                createdAt,
-                fullName,
-                deliveryAddress,
-                linkedinSlug,
-                linkedinHash,
-                aiRunId,
-                ipHash,
-                uaHash,
-                cardId,
-                email
-            ]
-        );
+        await insertClaim({
+            id: claimId, createdAt, fullName, deliveryAddress,
+            linkedinSlug, linkedinHash, aiRunId, ipHash, uaHash,
+            status: 'accepted', cardId, email
+        });
 
         const remaining = Number(updatedRows[0]?.remaining ?? 0);
         return {

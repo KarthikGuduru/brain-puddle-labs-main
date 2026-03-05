@@ -291,22 +291,6 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             }
             if (!blob) return;
 
-            // Mobile Primary: Web Share API (native "Save Image" option without blank window flash)
-            if (isMobile && navigator.share) {
-                const file = new File([blob], `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`, { type: 'image/jpeg' });
-                if (navigator.canShare?.({ files: [file] })) {
-                    try {
-                        await navigator.share({ files: [file] });
-                        trackEvent('ai_card_downloaded', { aiRunId: aiRunId || null, method: 'web_share' });
-                        return; // Done!
-                    } catch (e) {
-                        // User cancelled or share failed, log and abort rather than forcing a web download
-                        console.error("Web share cancelled or failed", e);
-                        return;
-                    }
-                }
-            }
-
             // Standard fallback for Desktop/Mac/iPad, or Mobile where Web Share is heavily restricted
             const blobUrl = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -332,6 +316,13 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
         setIsSharing(true);
         trackEvent('ai_share_clicked', { aiRunId: aiRunId || null });
+
+        if (isMobileDevice()) {
+            alert('LinkedIn mobile sharing is currently limited. Your card has been downloaded instead!');
+            await handleDownload();
+            setIsSharing(false);
+            return;
+        }
 
         // --- DESKTOP / ANDROID FLOW BELOW ---
         // (This uses window.open and creates a persistent custom share URL image)
@@ -368,12 +359,11 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         await new Promise(resolve => setTimeout(resolve, 50));
 
         try {
-            const isMobile = isMobileDevice();
             let blob = downloadBlob;
             let cardDataUrl = '';
 
             if (!blob) {
-                const canvas = await captureBothSides(isMobile);
+                const canvas = await captureBothSides(false);
                 if (canvas) blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
             }
 

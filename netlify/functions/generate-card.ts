@@ -1,6 +1,26 @@
 import { Handler } from '@netlify/functions';
+import { d1Query, isD1Configured } from './_lib/d1';
 import { uploadCardImage } from './_lib/r2';
 import { makeId } from './_lib/utils';
+
+/**
+ * After uploading a card image to R2, link it to the most recent ai_run
+ * that doesn't yet have an r2_object_key. The frontend calls ai-run first,
+ * then generate-card immediately after, so the latest unlinked run is the
+ * correct one.
+ */
+const linkR2KeyToLatestRun = async (objectKey: string) => {
+    if (!isD1Configured()) return;
+    try {
+        await d1Query(
+            `UPDATE ai_runs SET r2_object_key = ?
+             WHERE id = (SELECT id FROM ai_runs WHERE r2_object_key IS NULL ORDER BY created_at DESC LIMIT 1)`,
+            [objectKey]
+        );
+    } catch {
+        // Non-critical — don't fail the card generation
+    }
+};
 
 const getInitials = (name: string) =>
     String(name || "BrainPuddle User")
@@ -90,6 +110,7 @@ export const handler: Handler = async (event) => {
         if (imagePromptBase64) {
             // Upload the user's custom photo to R2
             const { objectKey } = await uploadCardImage(imagePromptBase64, shareId);
+            await linkR2KeyToLatestRun(objectKey);
 
             return {
                 statusCode: 200,
@@ -106,6 +127,7 @@ export const handler: Handler = async (event) => {
 
         // Upload the generated SVG to R2
         const { objectKey } = await uploadCardImage(svgBase64, shareId);
+        await linkR2KeyToLatestRun(objectKey);
 
         return {
             statusCode: 200,

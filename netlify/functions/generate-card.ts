@@ -1,4 +1,5 @@
 import { Handler } from '@netlify/functions';
+import { buildFullCardSvg } from './_lib/card-renderer';
 import { d1Query, isD1Configured } from './_lib/d1';
 import { uploadCardImage } from './_lib/r2';
 import { makeId } from './_lib/utils';
@@ -103,39 +104,47 @@ export const handler: Handler = async (event) => {
     }
 
     try {
-        const { name, imagePromptBase64 } = JSON.parse(event.body || '{}');
+        const { name, imagePromptBase64, analysis } = JSON.parse(event.body || '{}');
         const shareId = makeId('sh').replace(/^sh_/, '');
 
-        // If the user uploaded an image, pass it through unchanged
-        if (imagePromptBase64) {
-            // Upload the user's custom photo to R2
-            const { objectKey } = await uploadCardImage(imagePromptBase64, shareId);
-            await linkR2KeyToLatestRun(objectKey);
+        // Determine the photo data URL (user upload or generated initials)
+        const photoDataUrl = imagePromptBase64 || buildStylisedInitialsImage(name);
 
-            return {
-                statusCode: 200,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    imageUrl: imagePromptBase64,
-                    r2_object_key: objectKey
-                })
-            };
-        }
+        // Build the full print-ready card SVG if we have analysis data
+        const pokemon = analysis?.pokemon || {};
+        const fullCardDataUrl = buildFullCardSvg({
+            name: pokemon.name || name || 'Professional User',
+            title: pokemon.title || 'Digital Professional',
+            type: pokemon.type || analysis?.type || 'default',
+            photoDataUrl,
+            hp: Number(pokemon.hp || 50),
+            score: Number(analysis?.score ?? 50),
+            tier: String(analysis?.tier || pokemon.stage || ''),
+            stage: String(pokemon.stage || ''),
+            primaryDomain: String(pokemon.primaryDomain || ''),
+            operatingMode: String(pokemon.operatingMode || ''),
+            humanLeverage: String(pokemon.humanLeverage || ''),
+            skills: Array.isArray(pokemon.skills) ? pokemon.skills : [],
+            powerUps: Array.isArray(pokemon.powerUps) ? pokemon.powerUps : [],
+            stats: {
+                cognitiveDepth: Number(pokemon.stats?.cognitiveDepth ?? 50),
+                decisionAutonomy: Number(pokemon.stats?.decisionAutonomy ?? 50),
+                adaptability: Number(pokemon.stats?.adaptability ?? 50),
+                systemLeverage: Number(pokemon.stats?.systemLeverage ?? 50),
+            },
+        });
 
-        // No user image → generate stylised initials SVG
-        const svgBase64 = buildStylisedInitialsImage(name);
-
-        // Upload the generated SVG to R2
-        const { objectKey } = await uploadCardImage(svgBase64, shareId);
+        // Upload the FULL card (not just the photo) to R2
+        const { objectKey } = await uploadCardImage(fullCardDataUrl, shareId);
         await linkR2KeyToLatestRun(objectKey);
 
         return {
             statusCode: 200,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                imageUrl: svgBase64,
+                imageUrl: photoDataUrl,
                 r2_object_key: objectKey,
-                fallback: false
+                fallback: !imagePromptBase64
             })
         };
 

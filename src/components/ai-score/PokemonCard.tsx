@@ -170,7 +170,7 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
                         }}>{name}</h2>
                         <div className="card-hp">
                             <span className="hp-label">RESILIENCE</span>
-                            <span className="hp-value">{replaceabilityScore ? 100 - replaceabilityScore : hp}</span>
+                            <span className="hp-value">{replaceabilityScore != null ? 100 - replaceabilityScore : hp}</span>
                             <div className="type-icon">{type === 'Creative' ? '✨' : type === 'Engineering' ? '⚙️' : '🧠'}</div>
                         </div>
                     </div>
@@ -242,7 +242,7 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
                         <img src="/logo.png" alt="" style={{ position: 'absolute', bottom: '15%', left: '50%', transform: 'translateX(-50%)', width: '60%', opacity: 0.08, pointerEvents: 'none', filter: 'grayscale(100%)' }} />
                         <h3 className="back-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span>AI Resilience Score</span>
-                            <span style={{ fontSize: '1.4rem', color: '#111' }}>{replaceabilityScore ? 100 - replaceabilityScore : 100}/100</span>
+                            <span style={{ fontSize: '1.4rem', color: '#111' }}>{replaceabilityScore != null ? 100 - replaceabilityScore : 100}/100</span>
                         </h3>
                         <div className="pokedex-text">
                             {pokedexEntry}

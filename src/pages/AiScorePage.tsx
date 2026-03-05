@@ -898,7 +898,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                             {/* Hidden render target for html2canvas to capture the blob BEFORE transitioning to results */}
                             {analysisData && (
                                 <div style={{ position: 'absolute', top: '-10000px', left: '-10000px', opacity: 0, pointerEvents: 'none', zIndex: -9999 }}>
-                                    <PokemonCard ref={cardRef} {...analysisData.pokemon} />
+                                    <PokemonCard ref={cardRef} {...analysisData.pokemon} replaceabilityScore={analysisData.score} replaceabilityTier={analysisData.tier} />
                                 </div>
                             )}
 

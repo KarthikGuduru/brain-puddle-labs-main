@@ -88,34 +88,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         };
     }, []);
 
-    // Pre-generate the download blob in the background when results are ready.
-    // This allows action handlers to be fully synchronous and resilient on mobile.
-    useEffect(() => {
-        if (step === 'results' && analysisData && cardRef.current) {
-            const generateBlob = async () => {
-                setIsGeneratingBlob(true);
-                try {
-                    // Give Framer Motion and fonts a tiny moment to settle before capturing
-                    await new Promise(resolve => setTimeout(resolve, 50));
-
-                    // We generate via offscreen clone for the background blob,
-                    // as it's safer and invisible to the user.
-                    const canvas = await captureBothSides(true);
-                    if (!canvas) return;
-
-                    const blob = await new Promise<Blob | null>((resolve) =>
-                        canvas.toBlob(resolve, 'image/jpeg', 0.9)
-                    );
-                    if (blob) setDownloadBlob(blob);
-                } catch (err) {
-                    console.error('Failed background card capture', err);
-                } finally {
-                    setIsGeneratingBlob(false);
-                }
-            };
-            generateBlob();
-        }
-    }, [step, analysisData]);
+    // We now generate the blob synchronously on-demand during the analyzing phase,
+    // so this useEffect is completely removed to prevent overlapping lifecycle bugs.
 
     /**
      * html2canvas ignores CSS object-fit, so SVG data-URL images render
@@ -671,15 +645,9 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                 aiRunId: trackedRunId || null
             });
 
-            // Generate the image in the background, we will update it later
+            // Generate the image in the background, we will update it later.
+            // When this is done, it will handle the transition to 'results'.
             generateCardImage(apiData, imagePreview, requestId, trackedRunId);
-
-            queueTransition(() => {
-                if (scanRequestIdRef.current === requestId) {
-                    setStep('results');
-                }
-            }, 1500);
-
         } catch (error) {
             console.error(error);
             trackEvent('ai_scan_failed', {
@@ -696,6 +664,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     };
 
     const generateCardImage = async (data: AnalysisResult, imageBase64: string | null, requestId: number, trackedRunId: string | null) => {
+        setIsGeneratingBlob(true);
         try {
             const response = await fetch('/api/generate-card', {
                 method: 'POST',
@@ -708,30 +677,57 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                     imagePromptBase64: imageBase64
                 })
             });
+
+            let finalData = data;
+
             if (response.ok) {
                 const imgData = await response.json() as { imageUrl?: string };
                 if (scanRequestIdRef.current !== requestId) return;
-                const imageUrl = imgData.imageUrl;
-                if (!imageUrl) return;
 
-                setAnalysisData((prev) => ({
-                    ...(prev ?? data),
-                    pokemon: {
-                        ...(prev?.pokemon ?? data.pokemon),
-                        photoUrl: imageUrl
-                    }
-                }));
-                trackEvent('ai_card_generated', {
-                    aiRunId: trackedRunId || aiRunId || null,
-                    source: imageBase64 ? 'upload' : 'generated'
-                });
+                if (imgData.imageUrl) {
+                    finalData = {
+                        ...data,
+                        pokemon: {
+                            ...data.pokemon,
+                            photoUrl: imgData.imageUrl
+                        }
+                    };
+                    setAnalysisData(finalData);
+
+                    trackEvent('ai_card_generated', {
+                        aiRunId: trackedRunId || aiRunId || null,
+                        source: imageBase64 ? 'upload' : 'generated'
+                    });
+                }
             }
+
+            // 1. Wait a moment for React to mount the hidden <PokemonCard> inside the 'analyzing' step
+            await new Promise(resolve => setTimeout(resolve, 150));
+
+            // 2. Capture the blob in the background
+            const canvas = await captureBothSides(true);
+            if (canvas) {
+                const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+                if (blob) setDownloadBlob(blob);
+            }
+
+            // 3. Finally, transition to the results screen. The blob is already cached!
+            if (scanRequestIdRef.current === requestId) {
+                queueTransition(() => setStep('results'), 100);
+            }
+
         } catch (error) {
-            console.error("Failed to generate image", error);
+            console.error("Failed to generate image or blob", error);
             trackEvent('ai_card_generation_failed', {
                 aiRunId: trackedRunId || aiRunId || null,
                 reason: (error as Error)?.message || 'unknown'
             });
+            // Still transition to results even if image/blob failed, so they aren't stuck loading forever
+            if (scanRequestIdRef.current === requestId) {
+                queueTransition(() => setStep('results'), 100);
+            }
+        } finally {
+            setIsGeneratingBlob(false);
         }
     };
 
@@ -882,6 +878,14 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                     transition={{ duration: 10, ease: "easeOut" }}
                                 />
                             </div>
+
+                            {/* Hidden render target for html2canvas to capture the blob BEFORE transitioning to results */}
+                            {analysisData && (
+                                <div style={{ position: 'absolute', top: '-10000px', left: '-10000px', opacity: 0, pointerEvents: 'none', zIndex: -9999 }}>
+                                    <PokemonCard ref={cardRef} {...analysisData.pokemon} />
+                                </div>
+                            )}
+
                         </motion.div>
                     )}
 

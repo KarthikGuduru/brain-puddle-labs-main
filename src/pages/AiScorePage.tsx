@@ -716,11 +716,11 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                     const reader = new FileReader();
                     reader.onloadend = () => {
                         if (typeof reader.result === 'string') {
-                            fetch('/.netlify/functions/save-card-blob', {
+                            fetch('/api/save-card-blob', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ cardImageBase64: reader.result, aiRunId: runId })
-                            }).catch(() => { /* fire-and-forget */ });
+                            }).catch((err) => console.warn('save-card-blob failed:', err));
                         }
                     };
                     reader.readAsDataURL(blob);

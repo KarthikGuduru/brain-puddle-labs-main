@@ -215,8 +215,11 @@ NOTE ON HALLUCINATIONS: If the input is just a URL without deep body text, DO NO
 
         const analysis = JSON.parse(gptRes.data.choices[0].message.content);
 
+        // Boost resilience by 10 points (lower raw score = harder to replace)
+        analysis.score = Math.max(0, (analysis.score || 0) - 10);
+
         // Deterministically enforce the Resilience 3-stage tiers for all user-facing labels
-        const resilienceScore = 100 - (analysis.score || 0);
+        const resilienceScore = 100 - analysis.score;
 
         let finalTier = "⚠️ Highly Replaceable";
         let finalColor = "#F25F22"; // Rams Orange

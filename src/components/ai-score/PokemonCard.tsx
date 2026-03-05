@@ -216,9 +216,21 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
                     </div>
 
                     <div className="card-stats-bottom" style={{ display: 'flex', justifyContent: 'space-between', padding: '0 10px' }}>
-                        <div className="stat-weakness">Automation Vulnerability<br /><span>⚠️ Low</span></div>
-                        <div className="stat-resistance">Context Advantage<br /><span>♻️ High</span></div>
-                        <div className="stat-retreat">Upgrade Cost<br /><span>⬆️ 2 XP</span></div>
+                        {(() => {
+                            const resilience = replaceabilityScore != null ? 100 - replaceabilityScore : hp;
+                            const riskLabel = resilience >= 70 ? 'Low' : resilience >= 40 ? 'Medium' : 'High';
+                            const riskIcon = resilience >= 70 ? '🛡️' : resilience >= 40 ? '⚠️' : '🔥';
+                            const ctxLabel = resilience >= 70 ? 'High' : resilience >= 40 ? 'Medium' : 'Low';
+                            const ctxIcon = resilience >= 70 ? '♻️' : resilience >= 40 ? '⚡' : '💡';
+                            const xp = resilience >= 70 ? 1 : resilience >= 40 ? 2 : 3;
+                            return (
+                                <>
+                                    <div className="stat-weakness">Automation Risk<br /><span>{riskIcon} {riskLabel}</span></div>
+                                    <div className="stat-resistance">Context Advantage<br /><span>{ctxIcon} {ctxLabel}</span></div>
+                                    <div className="stat-retreat">Upgrade Cost<br /><span>⬆️ {xp} XP</span></div>
+                                </>
+                            );
+                        })()}
                     </div>
 
                     <div style={{ textAlign: 'center', fontSize: '0.45rem', opacity: 0.4, fontWeight: 700, marginTop: 'auto', paddingTop: '2px' }}>

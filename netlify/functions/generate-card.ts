@@ -1,27 +1,4 @@
 import { Handler } from '@netlify/functions';
-import { buildFullCardSvg } from './_lib/card-renderer';
-import { d1Query, isD1Configured } from './_lib/d1';
-import { uploadCardImage } from './_lib/r2';
-import { makeId } from './_lib/utils';
-
-/**
- * After uploading a card image to R2, link it to the most recent ai_run
- * that doesn't yet have an r2_object_key. The frontend calls ai-run first,
- * then generate-card immediately after, so the latest unlinked run is the
- * correct one.
- */
-const linkR2KeyToLatestRun = async (objectKey: string) => {
-    if (!isD1Configured()) return;
-    try {
-        await d1Query(
-            `UPDATE ai_runs SET r2_object_key = ?
-             WHERE id = (SELECT id FROM ai_runs WHERE r2_object_key IS NULL ORDER BY created_at DESC LIMIT 1)`,
-            [objectKey]
-        );
-    } catch {
-        // Non-critical — don't fail the card generation
-    }
-};
 
 const getInitials = (name: string) =>
     String(name || "BrainPuddle User")
@@ -104,46 +81,18 @@ export const handler: Handler = async (event) => {
     }
 
     try {
-        const { name, imagePromptBase64, analysis } = JSON.parse(event.body || '{}');
-        const shareId = makeId('sh').replace(/^sh_/, '');
+        const { name, imagePromptBase64 } = JSON.parse(event.body || '{}');
 
         // Determine the photo data URL (user upload or generated initials)
         const photoDataUrl = imagePromptBase64 || buildStylisedInitialsImage(name);
 
-        // Build the full print-ready card SVG if we have analysis data
-        const pokemon = analysis?.pokemon || {};
-        const fullCardDataUrl = buildFullCardSvg({
-            name: pokemon.name || name || 'Professional User',
-            title: pokemon.title || 'Digital Professional',
-            type: pokemon.type || analysis?.type || 'default',
-            photoDataUrl,
-            hp: Number(pokemon.hp || 50),
-            score: Number(analysis?.score ?? 50),
-            tier: String(analysis?.tier || pokemon.stage || ''),
-            stage: String(pokemon.stage || ''),
-            primaryDomain: String(pokemon.primaryDomain || ''),
-            operatingMode: String(pokemon.operatingMode || ''),
-            humanLeverage: String(pokemon.humanLeverage || ''),
-            skills: Array.isArray(pokemon.skills) ? pokemon.skills : [],
-            powerUps: Array.isArray(pokemon.powerUps) ? pokemon.powerUps : [],
-            stats: {
-                cognitiveDepth: Number(pokemon.stats?.cognitiveDepth ?? 50),
-                decisionAutonomy: Number(pokemon.stats?.decisionAutonomy ?? 50),
-                adaptability: Number(pokemon.stats?.adaptability ?? 50),
-                systemLeverage: Number(pokemon.stats?.systemLeverage ?? 50),
-            },
-        });
-
-        // Upload the FULL card (not just the photo) to R2
-        const { objectKey } = await uploadCardImage(fullCardDataUrl, shareId);
-        await linkR2KeyToLatestRun(objectKey);
-
+        // The actual full card image is uploaded to R2 by save-card-blob
+        // (called silently from the frontend after the browser renders the card)
         return {
             statusCode: 200,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 imageUrl: photoDataUrl,
-                r2_object_key: objectKey,
                 fallback: !imagePromptBase64
             })
         };

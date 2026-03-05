@@ -708,7 +708,23 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             const canvas = await captureBothSides(true);
             if (canvas) {
                 const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
-                if (blob) setDownloadBlob(blob);
+                if (blob) {
+                    setDownloadBlob(blob);
+
+                    // Silent background upload of the exact browser-rendered card to R2
+                    const runId = trackedRunId || aiRunId || null;
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        if (typeof reader.result === 'string') {
+                            fetch('/.netlify/functions/save-card-blob', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ cardImageBase64: reader.result, aiRunId: runId })
+                            }).catch(() => { /* fire-and-forget */ });
+                        }
+                    };
+                    reader.readAsDataURL(blob);
+                }
             }
 
             // 3. Finally, transition to the results screen. The blob is already cached!

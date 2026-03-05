@@ -1,6 +1,5 @@
 import { Handler } from '@netlify/functions';
 import { d1Query, isD1Configured } from './_lib/d1';
-import { encryptText } from './_lib/crypto';
 import { getLinkedInSlug, sha256 } from './_lib/hash';
 import { localStore } from './_lib/local-store';
 import { checkRateLimit } from './_lib/ratelimit';
@@ -123,8 +122,8 @@ export const handler: Handler = async (event) => {
                 [
                     claimId,
                     createdAt,
-                    encryptText(fullName),
-                    encryptText(deliveryAddress),
+                    fullName,
+                    deliveryAddress,
                     linkedinSlug,
                     linkedinHash,
                     aiRunId,
@@ -145,8 +144,8 @@ export const handler: Handler = async (event) => {
             [
                 claimId,
                 createdAt,
-                encryptText(fullName),
-                encryptText(deliveryAddress),
+                fullName,
+                deliveryAddress,
                 linkedinSlug,
                 linkedinHash,
                 aiRunId,
